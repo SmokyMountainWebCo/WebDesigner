@@ -155,6 +155,12 @@ def main():
     ap.add_argument("--threshold", type=float, default=0.30,
                     help="copy-overlap above this is flagged (default 0.30)")
     ap.add_argument("--pairs", type=int, default=12, help="worst pairs to print")
+    ap.add_argument("--network", action="store_true",
+                    help="the set is a deliberate family: also warn when sites "
+                         "are structurally too UNALIKE to read as one network")
+    ap.add_argument("--cohesion", type=float, default=0.35,
+                    help="--network: structure overlap below this is too loose "
+                         "to read as a family (default 0.35)")
     args = ap.parse_args()
 
     sites = collect(args.root)
@@ -231,13 +237,37 @@ def main():
                 print("    every %s ends with   %r" % (label, suf[:60]))
             print()
 
+    # Copy overlap is the failure in every mode. Nothing else is.
     flagged = [r for r in rows if r[0] >= args.threshold]
     print("  %d of %d pairs over the %.0f%% copy threshold" % (len(flagged), n, args.threshold * 100))
     if flagged:
         print("  These read as one site with the nouns changed. Fix by adding facts")
         print("  only that business has — not by rewording. See docs/BUILD-PROTOCOL.md.")
+
+    if args.network:
+        # A deliberate family has the opposite risk too: sites so structurally
+        # unalike that nothing signals they belong together. Shared chrome is
+        # the asset here, so low structural overlap is a finding, not a win.
+        loose = [r for r in rows if r[1] < args.cohesion]
+        print()
+        print("  Network cohesion (structure ≥ %.0f%%)" % (args.cohesion * 100))
+        print("    %d of %d pairs are below it — too unalike to read as one network"
+              % (len(loose), n))
+        if avg_s < args.cohesion:
+            print("    set average %.1f%% is below the floor. A family is recognised by its"
+                  % (avg_s * 100))
+            print("    chrome — shared nav, footer, badge, palette, type and structured data.")
+            print("    Shared skeleton is the asset; shared sentences are the liability.")
+        else:
+            print("    set average %.1f%% — the family reads as one." % (avg_s * 100))
+        # Assets shared across a family is the point, not a problem.
+        avg_x = sum(r[3] for r in rows) / n
+        print("    shared assets average %.0f%% — in a network this should be high"
+              % (avg_x * 100))
+
+    if flagged:
         sys.exit(1)
-    print("  PASS — the set carries real per-site difference.")
+    print("\n  PASS — the set carries real per-site difference.")
 
 
 if __name__ == "__main__":

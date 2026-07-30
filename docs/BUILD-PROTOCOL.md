@@ -294,6 +294,66 @@ under anyone's definition.
 
 ---
 
+### A network is not the same problem as a batch
+
+There are two different things one template can produce, and they fail in
+opposite directions.
+
+- **A batch** — unrelated sites for unrelated businesses that merely
+  happen to share a builder. Nothing should tie them together. The risk
+  is sameness.
+- **A network** — a deliberate family, where belonging is the point: a
+  registry and its members, a development and its properties. **Here the
+  shared look is the asset.** The risk is that nothing signals the sites
+  belong together at all.
+
+**The rule that resolves it: shared chrome, unshared content.**
+
+| Should be shared across the family | Must differ per site |
+|---|---|
+| palette, type scale, spacing ladder | every sentence |
+| nav and footer grammar, the registry badge | the facts |
+| structured-data shape (`isPartOf` / `memberOf` → the registry) | photographs |
+| performance floor, a11y floor, failure behavior | which sections exist |
+| the gate itself | the entity: `geo`, `address`, `areaServed` |
+
+That is how a franchise, a newspaper's local editions or a hotel group
+work. You recognise the brand instantly; every location carries its own
+address, hours, staff and photographs. Nobody calls that spam, because
+the shared part is *chrome* and the unshared part is *substance*.
+
+**Share the chrome literally, not by copying it.** A family whose shared
+layer is duplicated into every site drifts apart the first time one is
+edited — and pays for the same bytes N times
+(`library/patterns/embedded-fonts-break-even.md`). One cached stylesheet
+served from the registry's own origin buys cohesion *and* weight at once.
+The trade is a dependency on that origin: weigh it against
+`README.md` principle 1, and note that a member site whose registry
+stylesheet fails should still be readable — chrome is chrome.
+
+**On cross-linking, be deliberate.** A registry that links out to its
+members is a directory doing its job, and a member linking back with a
+badge is normal. What is not normal is a large set of sites under one
+owner cross-linking primarily to pass ranking signals. The test is the
+same as everywhere else here: is the link editorial, and does the
+directory have value to a reader who never clicks through?
+
+Run the set with `--network` and the second failure mode is measured too:
+
+```bash
+python3 tools/distinct.py sites/ --network --cohesion 0.35
+```
+
+Copy overlap still blocks. Structural overlap *below* the cohesion floor
+is reported as the family failing to read as one, and high shared-asset
+overlap becomes a good sign rather than a suspicious one.
+
+*Measured 2026-07-30 on a real seventeen-site set intended to become a
+community: copy 0.1% (healthy), but **structure 11.8% and shared assets
+1%**, with **135 of 136 pairs below the cohesion floor**. The sites do not
+share so much as a font. For that set the live problem was never
+templated sameness — it was that nothing tied the family together.*
+
 ### Measure it, don't assume it
 
 Sameness is invisible from the inside — each site looks fine on its own
@@ -323,10 +383,13 @@ overlap is fine; a shared hero photograph means neither site has one.
 | headings | 0.6% |
 
 That is a healthy set — the sites are genuinely different builds, not one
-build repeated. The two exceptions show what the failure looks like early:
-a pair of pilot previews measured **100% structural identity with 27%
-heading-shape overlap** — the same page with different words. At two sites
-nobody notices. At forty it is the whole set's reputation.
+build repeated. One pair of pilot previews measured **100% structural
+identity with 17% copy overlap**. Read that correctly: at the default
+threshold it passes, and for a deliberate network an identical skeleton is
+**on-brand rather than defective**. It is the copy figure that would have
+mattered, and it was fine. Heading-shape reuse across the set — the same
+sentence formula appearing on two sites — is the earlier warning, and the
+cheaper one to act on.
 
 Run it before a batch ships. It exits non-zero over the threshold.
 

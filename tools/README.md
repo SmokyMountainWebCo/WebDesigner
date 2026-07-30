@@ -13,6 +13,7 @@ preflight.py       a built site -> FAIL/WARN per check, non-zero exit.
                    The gate that stands between a folder and a deploy.
 distinct.py        a set of sites -> how alike they really are. Copy,
                    structure, headline shape and assets, pair by pair.
+                   --network also flags a family too loose to read as one.
 ```
 
 **Absorbing inward** — saved pages to reusable technique:
