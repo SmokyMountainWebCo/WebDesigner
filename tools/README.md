@@ -11,6 +11,8 @@ extract_fonts.py   any page with embedded fonts -> fonts.css
 check.js           a built page -> pass/fail + three screenshots
 preflight.py       a built site -> FAIL/WARN per check, non-zero exit.
                    The gate that stands between a folder and a deploy.
+distinct.py        a set of sites -> how alike they really are. Copy,
+                   structure, headline shape and assets, pair by pair.
 ```
 
 **Absorbing inward** — saved pages to reusable technique:

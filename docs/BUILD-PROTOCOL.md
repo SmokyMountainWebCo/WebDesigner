@@ -7,7 +7,7 @@
 > `DESIGN-LOOPHOLES.md`). How to make it fast (`INTERNET-SCIENCE.md`).
 > How to get it found (`MASTERING-THE-INTERNET.md`).
 
-Five phases. Each ends in something checkable, and **phase 4 is
+Seven phases. Each ends in something checkable, and **phase 4 is
 automated** — `tools/preflight.py` exits non-zero, so the protocol holds
 whether one site is being built or forty.
 
@@ -200,26 +200,147 @@ done
 [ "$fails" -eq 0 ] || { echo "$fails site(s) blocked"; exit 1; }
 ```
 
-Then three rules that only bite at scale:
+---
 
-- **A shared asset is served once.** At one site, embedding fonts buys a
-  zero-request page. At forty cross-linked sites it's the same megabytes
-  forty times — see `library/patterns/embedded-fonts-break-even.md`.
-- **Every site gets a distinct link-preview card**, generated from the
-  same template with its own data
-  (`library/patterns/link-preview-card.md`). Forty sites sharing one
-  card is forty identical grey boxes in a feed.
-- **Templated sameness is visible from the outside.** Forty pages with the
-  same headline shape and one swapped noun reads as spam to a person and
-  to a search engine. The dialect layer has to carry real per-site
-  difference — different questions answered, different proof, different
-  photographs — or the set is worth less than any one site in it.
+## Phase 6 · Distinctness — the part that only fails at scale
+
+A set of sites built from one template has a failure mode no single site
+has: **templated sameness.** Forty pages sharing a headline shape with one
+swapped noun read as spam to a person and to a search engine, and the set
+becomes worth less than any one site in it.
+
+The instinct is to fix it by rewriting — spinning the copy so it *reads*
+different. That is the thing being penalized, it is more work than the
+alternative, and it does not survive somebody reading two of the pages
+side by side.
+
+**The leverage point is that difference should be a consequence of data,
+not of writing.** Four ways to get it, in order of payoff.
+
+### 1 · Build on public data nobody else bothers to gather
+
+This is the real loophole, and it is free. Every property and every
+business sits on public facts that are *already* unique to it:
+
+- **County parcel, permit and assessor records** — acreage, permitted
+  use, year built, lot dimensions, zoning, permit history.
+- **Elevation, aspect and terrain** — a ridge parcel and a valley parcel
+  have genuinely different numbers.
+- **FEMA flood zone, USGS water data, NOAA climate normals** — first
+  frost, annual rainfall, snow days.
+- **Census and DOT** — traffic counts on the access road, drive times.
+
+A page built from its own parcel's records cannot be confused with
+another, because the facts differ. It also answers questions a buyer or
+guest actually has and competitors' pages do not, which is the definition
+of value the policy is written around. **Cite each source on the page**;
+sourced public data is exactly the "transparent sourcing" that separates
+useful scaled content from abuse.
+
+### 2 · Let facts decide which sections exist
+
+Do not build one layout with slots. Build a **component library** and let
+the data choose:
+
+```
+if facts.hot_tub:        render(hot_tub_block)
+if facts.emergency_247:  render(emergency_band)
+if facts.permit_number:  render(permit_provenance)
+```
+
+Then the page *shape* varies because the businesses vary, automatically
+and honestly. Two cabins with different amenities get different pages
+without anybody writing a second template. This is also why the facts
+contract in Phase 1 pays for itself twice.
+
+### 3 · The one thing that cannot be templated
+
+**Photographs of the actual place.** No amount of structure or copy work
+substitutes, and nothing else makes two sites unmistakably different at a
+glance. If the budget allows exactly one per-site investment, this is it.
+
+### 4 · Make the entity distinct to machines
+
+Distinct `geo`, `areaServed`, `address`, `telephone` and `sameAs` in each
+site's structured data. Cheap, and it is the difference a crawler can
+read without parsing prose.
 
 ---
+
+### Where the actual line is
+
+The relevant policy is **scaled content abuse**, added to Google's spam
+policies in March 2024 and still the governing guidance in 2026. The test
+is intent and value: do the pages genuinely serve users, or do they exist
+to capture traffic by volume.
+
+**Doorway pages** are defined narrowly and specifically — multiple
+domains or pages targeted at regions or cities that **funnel users to one
+destination**. That definition is the thing to stay clear of, and it maps
+onto this work precisely:
+
+- **Forty sites for forty different businesses, each owned by that
+  business and serving its own customers, is not doorway behavior.** The
+  sites do not funnel anywhere; each is the destination. This is a
+  legitimate model and it should be described that way.
+- **Forty unpaid spec sites that all point back to one agency is closer
+  to the line**, because the funnel is real. It may still be defensible,
+  but it is worth being deliberate: keep spec builds `noindex` until the
+  business owns them, and the question disappears entirely.
+
+The safest structural answer is also the honest one: **the client owns
+the site.** An owned site serving its own customers is not scaled content
+under anyone's definition.
+
+---
+
+### Measure it, don't assume it
+
+Sameness is invisible from the inside — each site looks fine on its own
+screen. `tools/distinct.py` measures the set:
+
+```bash
+python3 tools/distinct.py dist/ --threshold 0.30
+```
+
+Four independent signals, because they fail differently: **copy**
+(8-word shingles), **structure** (block-tag 5-grams), **headings**
+(reduced to sentence shape, so "Three hundred seats, one box office" and
+"Thirty-nine bedrooms, one front door" register as one formula), and
+**assets** by content hash.
+
+**Read the pair, not the number.** High structure with low copy is a
+design system working correctly. **High copy overlap is the failure,
+whatever the structure says.** A shared font set showing 100% asset
+overlap is fine; a shared hero photograph means neither site has one.
+
+**A measured baseline, from a real seventeen-site set (2026-07-30):**
+
+| Signal | Average over 136 pairs |
+|---|---|
+| copy | **0.1%** |
+| structure | 11.8% |
+| headings | 0.6% |
+
+That is a healthy set — the sites are genuinely different builds, not one
+build repeated. The two exceptions show what the failure looks like early:
+a pair of pilot previews measured **100% structural identity with 27%
+heading-shape overlap** — the same page with different words. At two sites
+nobody notices. At forty it is the whole set's reputation.
+
+Run it before a batch ships. It exits non-zero over the threshold.
 
 ## Sources and date
 
 Written **2026-07-30**. The checks encode failures observed in a real
 twelve-page corpus and a twenty-site deployment; the thresholds
 (title ~60, description ~155–160) follow `MASTERING-THE-INTERNET.md` and
-should be re-checked with it.
+should be re-checked with it. The distinctness baseline was measured with
+`tools/distinct.py` over seventeen live sites on that date.
+
+Search policy, checked 2026-07-30 — re-check before relying on it:
+
+- [Google Search spam policies](https://developers.google.com/search/docs/essentials/spam-policies)
+  — scaled content abuse and the doorway-page definition
+- [Scaled content abuse background](https://www.breaklineagency.com/guide-to-googles-scaled-content-abuse/)
+  — added March 2024, still governing in 2026
