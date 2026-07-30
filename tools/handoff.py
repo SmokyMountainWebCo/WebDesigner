@@ -34,6 +34,7 @@ propose, raise a hold, or fill a blank. It may never drop anything.**
 
 Usage:
     python3 tools/handoff.py primer
+    python3 tools/handoff.py roles
     python3 tools/handoff.py ask archetype --text "cabin, nightly, also for sale"
     python3 tools/handoff.py ask facts --text "..." --archetype service
     python3 tools/handoff.py ask link --text "frag A" --text "frag B"
@@ -130,6 +131,46 @@ ASKS = {
     },
 }
 
+# A "role" here is not a personality and not a process running somewhere.
+# It is a scoped ask with its own rules and a **declared falsifier** — the
+# thing that would show its output was wrong.
+#
+# That last field is the entry requirement. An agent whose output nothing
+# can check is not a worker; it is a confident opinion with no source and
+# no date. Two roles from the obvious org chart fail it and are recorded
+# here as refusals rather than quietly omitted:
+#
+#   marketer — nothing falsifies predicted public reaction. Log what was
+#              posted and what happened instead; that is real evidence.
+#   ceo      — a written decision procedure already exists and can be
+#              argued with in a commit. An agent verdict cannot.
+ROLES = {
+    "scout": {
+        "does": "Read a public record and extract what it actually says.",
+        "falsifier": "Every claim names a document, a date and a page. "
+                     "Open it and the claim is there, or it isn't.",
+        "ask": "facts",
+    },
+    "builder": {
+        "does": "Turn a brief into a page that passes the gate.",
+        "falsifier": "check.js, preflight.py and distinct.py reject it — "
+                     "contrast, a missing tel: on a service site, an "
+                     "unfilled ⟨blank⟩, or too close to its siblings.",
+        "ask": "facts",
+    },
+}
+
+REFUSED_ROLES = {
+    "marketer": "Nothing falsifies a prediction about public reaction. "
+                "Wording similarity is not outcome similarity, and a "
+                "corpus of past backlashes has no denominator. Log what "
+                "was posted and what happened — that is the real signal.",
+    "ceo": "A written decision procedure already exists and names which "
+           "rule decided. An agent here either restates it (a prompt, not "
+           "an agent) or replaces it with an opinion carrying no source "
+           "and no date. The second is strictly worse.",
+}
+
 RULE_TEXT = {
     1: "NEVER INVENT A FACT — anything not stated is \"unknown\" or null.",
     2: "GIVE A REASON, NOT A SCORE — one sentence someone can disagree with.",
@@ -137,6 +178,18 @@ RULE_TEXT = {
     4: "WRITING STYLE IS NEVER EVIDENCE — caps, terseness and fragments "
        "carry no signal.",
 }
+
+
+def _wrap(text, width):
+    words, line, out = text.split(), "", []
+    for w in words:
+        if len(line) + len(w) + 1 > width:
+            out.append(line); line = w
+        else:
+            line = (line + " " + w).strip()
+    if line:
+        out.append(line)
+    return out
 
 
 def ask_id(kind, payload):
@@ -340,7 +393,17 @@ def selftest():
     check("ask is stable for the same input",
           render_ask("facts", ["licensed plumber"])[1] == aid)
 
-    total = len(MESSY_REPLIES) * 2 + 8
+    # A role without a falsifier must not exist.
+    check("every role declares a falsifier",
+          all(spec.get("falsifier") for spec in ROLES.values()))
+    check("every role maps to a real ask kind",
+          all(spec["ask"] in ASKS for spec in ROLES.values()))
+    check("refused roles are recorded, not omitted",
+          set(REFUSED_ROLES) == {"marketer", "ceo"})
+    check("no role is both offered and refused",
+          not (set(ROLES) & set(REFUSED_ROLES)))
+
+    total = len(MESSY_REPLIES) * 2 + 12
     print("\n%d/%d passed" % (total - len(failed), total))
     return 1 if failed else 0
 
@@ -353,6 +416,7 @@ def main():
     sub = ap.add_subparsers(dest="cmd")
 
     sub.add_parser("primer", help="rules block to paste at the top of a chat")
+    sub.add_parser("roles", help="which roles exist, and what falsifies each")
 
     p = sub.add_parser("ask", help="emit a question for the model in the chat")
     p.add_argument("kind", choices=sorted(ASKS))
@@ -370,6 +434,23 @@ def main():
 
     if args.cmd == "primer":
         print(PRIMER)
+        return
+
+    if args.cmd == "roles":
+        print("ROLES — a role is a scoped ask with a declared falsifier.\n")
+        for name, spec in sorted(ROLES.items()):
+            print("  %s" % name)
+            print("    does:       %s" % spec["does"])
+            print("    falsified by: %s" % spec["falsifier"])
+            print("    ask kind:   %s\n" % spec["ask"])
+        print("REFUSED — no falsifier, so no role.\n")
+        for name, why in sorted(REFUSED_ROLES.items()):
+            print("  %s" % name)
+            for line in _wrap(why, 62):
+                print("    %s" % line)
+            print()
+        print("The entry requirement is the falsifier. An agent that cannot")
+        print("name what would show it wrong is an opinion with a job title.")
         return
 
     if args.cmd == "ask":

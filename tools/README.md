@@ -40,6 +40,9 @@ handoff.py         a refusal -> a self-contained block you paste into
                    `proposed — not verified`, never as checked facts.
                    A model may propose, hold, or fill a blank. It may
                    never drop anything.
+                   `roles` lists the scoped roles and, for each, the
+                   falsifier — the thing that would show its output was
+                   wrong. A role without one doesn't exist.
 ```
 
 **Checking claims** — asserted to verified:
