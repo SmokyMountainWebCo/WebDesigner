@@ -24,6 +24,8 @@ the authority on its scope — this table just routes you there.
 | the scroll-driven WebGL background, in detail | `docs/SCROLL-SCENE.md` |
 | pointing a domain, moving a site, not killing anyone's email | `docs/DNS-RUNBOOK.md` |
 | building or shipping an actual page | `tools/README.md`, then `template/` |
+| absorbing saved pages / zip archives into technique | `docs/INTAKE.md` |
+| what's already been extracted and kept | `library/README.md` |
 
 ## House rules
 
@@ -67,6 +69,30 @@ the authority on its scope — this table just routes you there.
   text, invisible structured data, and bought links are all out — they're
   detectable, they get penalized, and they're more work than the thing
   that works.
+
+## Absorbing outside material
+
+Intake is the one place material from outside arrives, so it's the one
+place with a hard rule. Full process in `docs/INTAKE.md`; the short
+version:
+
+- **`intake/` and `_work/` are gitignored and stay that way.** Raw drops
+  are never committed. A saved page copied into the repo isn't technique,
+  it's redistribution.
+- **Measurements and method graduate. Copy, images, names, and licensed
+  assets never do.** Palette values, scale steps, byte counts, and *how*
+  something was done are the transferable part — and the reason
+  `harvest.py` extracts no prose.
+- **No provenance, no graduation.** `ingest.py` writes empty `source_url`
+  and `license` fields on every entry; they get filled in by hand before
+  anything moves into `library/`. "I found it in a folder" is not a
+  license.
+- **Extracting a font is a capability, not a permission.** Identify the
+  family, then download the legitimate OFL copy. If it isn't open, it
+  doesn't travel.
+- **A technique seen three times gets promoted** from a `library/`
+  specimen to a paragraph in the relevant `docs/` pack. That promotion is
+  what the pipeline exists for.
 
 ## Working in the repo
 

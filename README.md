@@ -28,6 +28,8 @@ docs/
                              background in ~90 lines of shader.
   DNS-RUNBOOK.md             Pointing domains without taking a business
                              offline or killing its email.
+  INTAKE.md                  Absorbing saved pages and zip archives into
+                             technique — the pipeline and the license gate.
 template/
   page-template.html         A single-file page: embedded fonts, inline
                              CSS/JS, scroll-driven shader, zero requests.
@@ -38,7 +40,35 @@ tools/
   extract_fonts.py           Pull embedded @font-face rules out of any page.
   check.js                   Headless QA: console errors, WebGL alive,
                              screenshots at three scroll depths.
+  ingest.py                  A drop folder of .html/.zip -> safe unpack,
+                             hash, de-duplicate, inventory.
+  harvest.py                 Saved pages -> palette, tokens, scales, fonts,
+                             techniques, dependencies, shaders, a11y, weight.
+library/                     What graduated: palettes, tokens, patterns,
+                             shaders, snippets. Specimens, each with a
+                             source and a license.
 ```
+
+## Feeding it
+
+The repo is built to absorb material. Drop saved pages and archives into
+`intake/` and run two commands:
+
+```bash
+python3 tools/ingest.py  intake/ -o _work/
+python3 tools/harvest.py _work/manifest.json -o _work/harvest
+# read _work/harvest/REPORT.md
+```
+
+You get a corpus report: the palette ranked across every page, technique
+adoption per feature, every external origin depended on, the type and
+spacing scales actually used, inline shaders with their uniforms, and a
+ranked **Candidates to graduate** list.
+
+`intake/` and `_work/` are gitignored. What gets committed is the curated
+result in `library/`, and only after it clears the provenance and license
+gate in `docs/INTAKE.md` — measurements and method travel, copy and
+licensed assets do not.
 
 ## Where to start
 
@@ -51,6 +81,7 @@ tools/
 | build without paying for anything, legally | `docs/OPEN-SOURCE.md` |
 | ship a page that never breaks from a dead CDN | `template/` + `tools/` |
 | point a domain at a site | `docs/DNS-RUNBOOK.md` |
+| turn a folder of saved pages into reusable technique | `docs/INTAKE.md` |
 
 ## The principles the whole repo runs on
 

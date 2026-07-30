@@ -9,3 +9,8 @@ fonts.css
 node_modules/
 package-lock.json
 .DS_Store
+
+# Intake — raw drops and working output never get committed.
+# See docs/INTAKE.md for the provenance and license gate.
+intake/
+_work/

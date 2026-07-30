@@ -1,13 +1,30 @@
 # The toolchain
 
-Three small programs. No `package.json`, no lockfile, no framework. Python
-stdlib only for the build; Playwright for the optional QA pass.
+Five small programs. No `package.json`, no lockfile, no framework. Python
+stdlib only except the optional QA pass, which wants Playwright.
+
+**Building outward** — template to shipped page:
 
 ```
 build.py           config + fonts + template  ->  one self-contained HTML file
 extract_fonts.py   any page with embedded fonts -> fonts.css
 check.js           a built page -> pass/fail + three screenshots
 ```
+
+**Absorbing inward** — saved pages to reusable technique:
+
+```
+ingest.py          a drop folder of .html/.zip -> safe unpack, hash,
+                   de-duplicate, inventory  (_work/manifest.json)
+harvest.py         those pages -> palette, tokens, type + spacing scales,
+                   fonts, ~48 technique detections, external dependencies,
+                   inline shaders, a11y and weight signals, corpus REPORT.md
+```
+
+The two directions feed each other: harvest a corpus, graduate what earns
+it into `library/`, build the next page out of that. The intake half is
+documented in full — including the provenance and license gate — in
+`docs/INTAKE.md`.
 
 ## The workflow
 
@@ -79,6 +96,31 @@ it, which is exactly what makes a shared link work.
 If it *should* be indexed, delete the `noindex` line and see
 `docs/MASTERING-THE-INTERNET.md` for the tag set that makes a link preview
 render and a page get crawled.
+
+## The intake workflow
+
+```bash
+mkdir -p intake                     # drop saved .html files and .zip archives in
+python3 tools/ingest.py  intake/ -o _work/
+python3 tools/harvest.py _work/manifest.json -o _work/harvest
+less _work/harvest/REPORT.md
+```
+
+`ingest.py` refuses hostile archive entries rather than sanitizing them —
+path traversal, absolute paths, symlinks, and zip bombs are reported and
+skipped while the rest of the archive still extracts. Tune with
+`--max-ratio` and `--max-bytes`.
+
+`harvest.py` also runs on a single file with no manifest, which is the
+quickest way to interrogate one page:
+
+```bash
+python3 tools/harvest.py some-page.html | less
+```
+
+Read `docs/INTAKE.md` before moving anything into `library/`. The short
+version: measurements and method travel, copy and licensed assets don't,
+and nothing graduates without its source URL and license recorded.
 
 ## Why it's built this way
 
