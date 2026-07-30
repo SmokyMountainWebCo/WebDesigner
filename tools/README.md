@@ -1,6 +1,6 @@
 # The toolchain
 
-Nine small programs, in three directions. No `package.json`, no lockfile,
+Ten small programs, in four directions. No `package.json`, no lockfile,
 no framework. Python stdlib only except the optional QA pass, which wants
 Playwright.
 
@@ -27,6 +27,19 @@ brief.py           what the build is -> archetype (Phase 0), facts
                    marked ⟨blank⟩. Refuses to pick the archetype when
                    two purposes compete, because a wrong archetype
                    makes the gate enforce the wrong failures.
+```
+
+**Asking a model** — where a refusal needs a judgement:
+
+```
+handoff.py         a refusal -> a self-contained block you paste into
+                   ANY model's chat, and a parser that reads the reply
+                   back. No API key, no SDK, no vendor. The block
+                   carries its own rules, because a fresh chat doesn't
+                   know them. Answers come back marked `via: model` and
+                   `proposed — not verified`, never as checked facts.
+                   A model may propose, hold, or fill a blank. It may
+                   never drop anything.
 ```
 
 **Checking claims** — asserted to verified:

@@ -202,6 +202,13 @@ def render(text, archetype, evidence, competing, known, sources, base, draft):
         add("")
         add("  Re-run with --archetype <name> once you've decided, or")
         add("  split this into two builds if it is genuinely two sites.")
+        add("")
+        add("  To ask the model in whatever chat you're in:")
+        add("    python3 tools/handoff.py ask archetype --text \"...\"")
+        add("  Paste the block into any model's chat, then feed the reply")
+        add("  back with `handoff.py apply`. The answer arrives marked as")
+        add("  a proposal — it never becomes a fact the gate treats as")
+        add("  checked without a human confirming it.")
         return "\n".join(out), 2
 
     spec = ARCHETYPES[archetype]

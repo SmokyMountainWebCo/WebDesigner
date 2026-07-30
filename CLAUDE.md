@@ -31,6 +31,7 @@ the authority on its scope — this table just routes you there.
 | what's already been extracted and kept | `library/README.md` |
 | why a house rule exists, before arguing with it | `docs/LINEAGE.md` |
 | checking that every citation in a docs tree still resolves | `tools/linkcheck.py` |
+| handing a judgement call to the model in whatever chat you're in | `tools/handoff.py` |
 
 ## House rules
 
@@ -56,7 +57,10 @@ the authority on its scope — this table just routes you there.
 - **Prefer the platform to a dependency.** Check MDN before adding a
   library. `:has()`, `<dialog>`, container queries, `clamp()`, scroll-driven
   animations, and OKLCH all moved from library to built-in recently, and
-  more will.
+  more will. This extends to models: `handoff.py` asks whichever model is
+  already in your chat rather than importing a vendor SDK and holding an
+  API key — so the system works in any chat, costs nothing per call, and
+  survives any provider renaming a parameter.
 - **Every technique must degrade visibly.** A shader that fails reveals
   the gradient beneath it; a font that fails falls back to a chosen stack;
   a script that fails leaves readable content. "What happens when this
