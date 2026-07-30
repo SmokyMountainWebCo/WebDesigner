@@ -9,6 +9,8 @@ stdlib only except the optional QA pass, which wants Playwright.
 build.py           config + fonts + template  ->  one self-contained HTML file
 extract_fonts.py   any page with embedded fonts -> fonts.css
 check.js           a built page -> pass/fail + three screenshots
+preflight.py       a built site -> FAIL/WARN per check, non-zero exit.
+                   The gate that stands between a folder and a deploy.
 ```
 
 **Absorbing inward** — saved pages to reusable technique:

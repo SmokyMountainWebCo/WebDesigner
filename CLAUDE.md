@@ -25,6 +25,7 @@ the authority on its scope — this table just routes you there.
 | scroll-driven tours, flyovers, walkthroughs, video scrub, splats | `docs/CINEMATIC-SCROLL.md` |
 | pointing a domain, moving a site, not killing anyone's email | `docs/DNS-RUNBOOK.md` |
 | building or shipping an actual page | `tools/README.md`, then `template/` |
+| starting a new build, or building many at once | `docs/BUILD-PROTOCOL.md` |
 | absorbing saved pages / zip archives into technique | `docs/INTAKE.md` |
 | what's already been extracted and kept | `library/README.md` |
 
@@ -94,6 +95,19 @@ version:
 - **A technique seen three times gets promoted** from a `library/`
   specimen to a paragraph in the relevant `docs/` pack. That promotion is
   what the pipeline exists for.
+
+## Before any build ships
+
+`docs/BUILD-PROTOCOL.md` is the order of operations, and phase 4 is
+enforced rather than remembered:
+
+```bash
+python3 tools/preflight.py site/ --archetype service --base https://the-real-host/
+```
+
+`FAIL` exits non-zero. A build that isn't launching must say so with
+`--draft`. Determine the archetype first — it decides what counts as a
+failure.
 
 ## Working in the repo
 

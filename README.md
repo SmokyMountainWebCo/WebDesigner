@@ -30,6 +30,8 @@ docs/
                              offline or killing its email.
   INTAKE.md                  Absorbing saved pages and zip archives into
                              technique — the pipeline and the license gate.
+  BUILD-PROTOCOL.md          The order of operations for every build, and
+                             the automated gate before deploy.
   CINEMATIC-SCROLL.md        Scroll as camera: video scrub, image sequences,
                              photogrammetry and Gaussian splats — and which
                              one a given trade actually needs.
@@ -47,6 +49,8 @@ tools/
                              hash, de-duplicate, inventory.
   harvest.py                 Saved pages -> palette, tokens, scales, fonts,
                              techniques, dependencies, shaders, a11y, weight.
+  preflight.py               The gate: refuses to ship a build with unfilled
+                             blanks, broken previews or a dead canonical.
 library/                     What graduated: palettes, tokens, patterns,
                              shaders, snippets. Specimens, each with a
                              source and a license.
@@ -86,6 +90,7 @@ licensed assets do not.
 | point a domain at a site | `docs/DNS-RUNBOOK.md` |
 | turn a folder of saved pages into reusable technique | `docs/INTAKE.md` |
 | build a scroll-driven tour, flyover or walkthrough | `docs/CINEMATIC-SCROLL.md` |
+| start a new build, or build forty at once | `docs/BUILD-PROTOCOL.md` |
 
 ## The principles the whole repo runs on
 
