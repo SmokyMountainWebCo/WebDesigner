@@ -161,7 +161,22 @@ def main():
     ap.add_argument("--cohesion", type=float, default=0.35,
                     help="--network: structure overlap below this is too loose "
                          "to read as a family (default 0.35)")
+    ap.add_argument("--max-formula", type=int, default=0,
+                    help="max sites that may share one headline shape (0 = off). "
+                         "The earliest spam signal and the cheapest to fix.")
+    ap.add_argument("--policy", help="JSON file of thresholds, so the numbers live "
+                                     "somewhere rather than in somebody's memory")
     args = ap.parse_args()
+
+    # A policy file makes the decision durable. Explicit flags still win.
+    if args.policy:
+        import json as _json
+        pol = _json.load(open(args.policy, encoding="utf-8"))
+        given = set(a.lstrip("-").replace("-", "_") for a in sys.argv if a.startswith("--"))
+        for key, dest in (("copy_max", "threshold"), ("cohesion_min", "cohesion"),
+                          ("formula_max", "max_formula"), ("network", "network")):
+            if key in pol and dest not in given:
+                setattr(args, dest, pol[key])
 
     sites = collect(args.root)
     if len(sites) < 2:
@@ -206,10 +221,17 @@ def main():
         for h in p["heads"]:
             shapes.setdefault(h, set()).add(p["name"])
     reused = sorted(((len(v), k) for k, v in shapes.items() if len(v) > 1), reverse=True)
+    over_formula = []
     if reused:
         print("  Headline formulas reused across sites")
         for cnt, shape in reused[:8]:
-            print("    %2d sites  %s" % (cnt, shape[:78]))
+            over = args.max_formula and cnt > args.max_formula
+            if over:
+                over_formula.append((cnt, shape))
+            print("    %2d sites  %s%s" % (cnt, shape[:70], "  <-- OVER" if over else ""))
+        if args.max_formula:
+            extra = [(c, s) for c, s in reused[8:] if c > args.max_formula]
+            over_formula += extra
         print()
 
     # Title / description built from one string with a slot swapped.
@@ -265,7 +287,19 @@ def main():
         print("    shared assets average %.0f%% — in a network this should be high"
               % (avg_x * 100))
 
-    if flagged:
+    if args.max_formula:
+        print()
+        print("  Headline formulas (max %d sites each)" % args.max_formula)
+        if over_formula:
+            print("    %d formula(s) used on too many sites:" % len(over_formula))
+            for cnt, shape in over_formula[:6]:
+                print("      %d sites  %s" % (cnt, shape[:66]))
+            print("    Retire the pattern, don't reword inside it — a formula reused")
+            print("    with fresh nouns is the same formula.")
+        else:
+            print("    none over the cap.")
+
+    if flagged or over_formula:
         sys.exit(1)
     print("\n  PASS — the set carries real per-site difference.")
 

@@ -1,0 +1,15 @@
+{
+  "_comment": "Thresholds for tools/distinct.py, so the numbers live in the repo rather than in somebody's memory. Copy this, set your own values, and pass it with --policy.",
+
+  "copy_max":     0.30,
+  "_copy_max":    "Max fraction of 8-word phrases two sites may share. Blocking.",
+
+  "network":      true,
+  "_network":     "The set is a deliberate family, so also check it coheres.",
+
+  "cohesion_min": 0.35,
+  "_cohesion_min":"Min structural overlap for the set to read as one network.",
+
+  "formula_max":  3,
+  "_formula_max": "Max sites that may share one headline shape. Blocking."
+}

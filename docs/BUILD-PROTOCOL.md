@@ -341,8 +341,28 @@ directory have value to a reader who never clicks through?
 Run the set with `--network` and the second failure mode is measured too:
 
 ```bash
-python3 tools/distinct.py sites/ --network --cohesion 0.35
+python3 tools/distinct.py sites/ --network --cohesion 0.35 --max-formula 3
+python3 tools/distinct.py sites/ --policy network-policy.json   # same, durable
 ```
+
+**Put the numbers in a file, not in somebody's memory.** See
+`tools/network-policy.example.json`. Four thresholds decide the whole
+posture:
+
+| Setting | What it governs | Choosing it |
+|---|---|---|
+| `copy_max` | fraction of 8-word phrases two sites may share | 0.15 strict (barely any shared boilerplate) · 0.30 balanced · 0.45 loose |
+| `cohesion_min` | structural overlap needed to read as one family | 0.20 light kinship · 0.35 recognisable kin · 0.55 franchise |
+| `formula_max` | sites allowed to share one headline shape | 1 never repeat · 2–3 workable · higher is visible on a registry page |
+| `network` | whether the set is a family at all | a batch of unrelated builds should leave this off |
+
+**Structure and chrome are not the same lever.** Cohesion is measured on
+the page skeleton, so it is bought by the *shared template*, not by the
+nav bar. Shared fonts and shared structured data buy a quiet kinship and
+machine-readable membership; they move the cohesion number barely at all.
+If a visitor standing on a member site should be able to *see* the
+network and travel to it, only a visible badge or shared nav does that —
+decide that explicitly rather than expecting typography to carry it.
 
 Copy overlap still blocks. Structural overlap *below* the cohesion floor
 is reported as the family failing to read as one, and high shared-asset

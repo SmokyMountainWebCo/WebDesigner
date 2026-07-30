@@ -14,6 +14,7 @@ preflight.py       a built site -> FAIL/WARN per check, non-zero exit.
 distinct.py        a set of sites -> how alike they really are. Copy,
                    structure, headline shape and assets, pair by pair.
                    --network also flags a family too loose to read as one.
+                   --policy reads the thresholds from a JSON file.
 ```
 
 **Absorbing inward** — saved pages to reusable technique:
