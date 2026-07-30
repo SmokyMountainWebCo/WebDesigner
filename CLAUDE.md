@@ -28,6 +28,7 @@ the authority on its scope — this table just routes you there.
 | starting a new build, or building many at once | `docs/BUILD-PROTOCOL.md` |
 | absorbing saved pages / zip archives into technique | `docs/INTAKE.md` |
 | what's already been extracted and kept | `library/README.md` |
+| why a house rule exists, before arguing with it | `docs/LINEAGE.md` |
 
 ## House rules
 

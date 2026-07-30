@@ -32,6 +32,8 @@ docs/
                              technique — the pipeline and the license gate.
   BUILD-PROTOCOL.md          The order of operations for every build, and
                              the automated gate before deploy.
+  LINEAGE.md                 Where the house rules came from — the four
+                             books each rule descends from.
   CINEMATIC-SCROLL.md        Scroll as camera: video scrub, image sequences,
                              photogrammetry and Gaussian splats — and which
                              one a given trade actually needs.
@@ -94,6 +96,7 @@ licensed assets do not.
 | turn a folder of saved pages into reusable technique | `docs/INTAKE.md` |
 | build a scroll-driven tour, flyover or walkthrough | `docs/CINEMATIC-SCROLL.md` |
 | start a new build, or build forty at once | `docs/BUILD-PROTOCOL.md` |
+| understand why a rule here exists before changing it | `docs/LINEAGE.md` |
 
 ## The principles the whole repo runs on
 
