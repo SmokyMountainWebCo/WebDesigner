@@ -1,0 +1,24 @@
+/* One @font-face per line, each src an embedded data: URI.
+   build.py injects these where the template has /*@@FONTS@@* / and
+   extract_fonts.py emits exactly this format.
+
+   The base64 payloads below are placeholders — replace each `BASE64...`
+   with a real base64-encoded woff2. Generate with either:
+     python3 tools/extract_fonts.py an-existing-page.html > fonts.css
+   or, from raw woff2 files:
+     base64 -w0 MyFace.woff2         (Linux)
+     base64 -i  MyFace.woff2         (macOS)
+
+   The three roles the template uses (map to CSS vars --s / --b / --m):
+     --s  serif display   (headings)
+     --b  serif body      (paragraphs)
+     --m  monospace       (labels, eyebrows, prices)
+   Any typeface trio works; only the family names below must match the
+   font-family values in the template's :root. Subset to Latin to shrink. */
+
+@font-face{font-family:'Display Serif';font-style:normal;font-weight:500;src:url(data:font/woff2;base64,BASE64_DISPLAY_500) format('woff2')}
+@font-face{font-family:'Display Serif';font-style:normal;font-weight:700;src:url(data:font/woff2;base64,BASE64_DISPLAY_700) format('woff2')}
+@font-face{font-family:'Display Serif';font-style:italic;font-weight:500;src:url(data:font/woff2;base64,BASE64_DISPLAY_500I) format('woff2')}
+@font-face{font-family:'Body Serif';font-style:normal;font-weight:400;src:url(data:font/woff2;base64,BASE64_BODY_400) format('woff2')}
+@font-face{font-family:'Body Serif';font-style:italic;font-weight:400;src:url(data:font/woff2;base64,BASE64_BODY_400I) format('woff2')}
+@font-face{font-family:'Label Mono';font-style:normal;font-weight:500;src:url(data:font/woff2;base64,BASE64_MONO_500) format('woff2')}

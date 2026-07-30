@@ -1,0 +1,11 @@
+# Build artifacts — the whole point is that they're reproducible
+dist/
+*.qa-*.png
+
+# Local config filled in from template/config.example.json
+config.json
+fonts.css
+
+node_modules/
+package-lock.json
+.DS_Store

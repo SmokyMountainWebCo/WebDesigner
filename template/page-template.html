@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{PAGE_TITLE}}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Unlisted by default: reachable only by direct link, kept out of search
+     results. Delete the next line when the page should be indexable.
+     Note: unlisted is not private — anyone with the URL can open it. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="{{META_DESCRIPTION}}">
+<!-- Link preview card. Absolute URLs only; crawlers do not run JS.
+     See docs/MASTERING-THE-INTERNET.md for the full tag set. -->
+<meta property="og:title" content="{{PAGE_TITLE}}">
+<meta property="og:description" content="{{META_DESCRIPTION}}">
+<meta property="og:type" content="website">
+<style>
+/*@@FONTS@@*/
+/* Embedded @font-face lines are injected above by tools/build.py from a fonts.css
+   file. Without them the page falls back to Georgia / system monospace and still
+   works — see docs/OPEN-SOURCE.md for subsetting and base64 embedding. */
+
+:root{
+  --night:#0A1210; --spruce:#101C17; --glass:rgba(8,15,12,.80);
+  --bone:#EDE6D8; --haze:#93A7B4; --slate:#7E8F89; --hairline:rgba(147,167,180,.22);
+  --lantern:#E9A63C; --dawn:#E8B98A; --lichen:#9BBD7E; --firefly:#D6E87A;
+  /* Three roles, any trio works. Swap these three lines and the whole page
+     re-skins. Names must match the families in your embedded fonts.css. */
+  --s:'Display Serif',Georgia,serif;      /* headings */
+  --b:'Body Serif',Georgia,serif;         /* paragraphs */
+  --m:'Label Mono',ui-monospace,monospace;/* eyebrows, labels, numbers */
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--night);color:var(--bone);font-family:var(--b);
+  font-size:clamp(16.5px,1.1vw,18px);line-height:1.68;-webkit-font-smoothing:antialiased;
+  overflow-x:hidden}
+p{margin:0}
+a{color:var(--lantern)}
+:focus-visible{outline:2px solid var(--lantern);outline-offset:3px}
+/* CSS gradient is the no-WebGL / no-JS fallback for the animated sky */
+#sky{position:fixed;inset:0;width:100%;height:100%;z-index:0;display:block;
+  background:linear-gradient(#131c2b 0%,#2b3446 40%,#6a5a54 72%,#c98f5a 88%,#1a2420 100%)}
+main{position:relative;z-index:1}
+
+/* ── nav ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;
+  justify-content:space-between;gap:16px;padding:16px clamp(16px,4vw,44px);
+  font-family:var(--m);font-size:.6rem;letter-spacing:.26em;text-transform:uppercase;
+  background:linear-gradient(rgba(6,10,9,.75),transparent);
+  transition:transform .45s cubic-bezier(.2,.7,.2,1)}
+nav.hide{transform:translateY(-110%)}
+nav .brand{color:var(--bone);white-space:nowrap}
+nav .brand i{font-style:normal;color:var(--haze)}
+nav ul{display:flex;gap:clamp(12px,2.4vw,28px);list-style:none;margin:0;padding:0}
+nav ul a{color:var(--haze);text-decoration:none}
+nav ul a:hover{color:var(--bone)}
+nav .pill{color:var(--bone);text-decoration:none;border:1px solid rgba(237,230,216,.4);
+  border-radius:999px;padding:.55em 1.2em;white-space:nowrap}
+nav .pill:hover{border-color:var(--lantern);color:var(--lantern)}
+@media(max-width:820px){nav ul{display:none}}
+
+/* ── full-height cinematic frames ── */
+.frame{min-height:100svh;display:grid;place-items:center;text-align:center;
+  padding:96px clamp(20px,6vw,48px) 64px;position:relative}
+.kicker{font-family:var(--m);font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--dawn);display:flex;align-items:center;gap:1.1em;justify-content:center;margin-bottom:1.8rem}
+.kicker::before,.kicker::after{content:"";width:34px;height:1px;background:rgba(232,185,138,.45)}
+h1{font-family:var(--s);font-weight:500;font-size:clamp(2.9rem,10.5vw,5.6rem);
+  line-height:1.04;margin:0;letter-spacing:.01em;text-wrap:balance;
+  text-shadow:0 2px 40px rgba(6,10,9,.55)}
+.hero-sub{margin-top:2rem;font-family:var(--m);font-size:.62rem;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--haze);line-height:2.1}
+.hero-sub b{color:var(--bone);font-weight:500}
+.ghost{display:inline-block;margin-top:2.4rem;font-family:var(--m);font-size:.62rem;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--bone);text-decoration:none;
+  border:1px solid rgba(237,230,216,.45);border-radius:999px;padding:.95em 2em;
+  backdrop-filter:none;background:rgba(6,10,9,.25)}
+.ghost:hover{border-color:var(--lantern);color:var(--lantern)}
+.cue{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);
+  font-family:var(--m);font-size:.56rem;letter-spacing:.3em;text-transform:uppercase;color:var(--haze)}
+@media (prefers-reduced-motion:no-preference){
+  .cue::after{content:"";display:block;width:1px;height:34px;margin:10px auto 0;
+    background:linear-gradient(var(--haze),transparent);animation:drop 2.2s ease-in-out infinite}
+  @keyframes drop{0%{transform:scaleY(0);transform-origin:top}55%{transform:scaleY(1)}100%{opacity:0;transform:scaleY(1)}}
+}
+.inter{font-family:var(--s);font-weight:500;font-size:clamp(1.7rem,5.6vw,3rem);
+  line-height:1.25;max-width:19em;text-wrap:balance;text-shadow:0 2px 32px rgba(6,10,9,.65)}
+.inter i{font-style:italic;color:var(--dawn)}
+.inter small{display:block;margin-top:1.6rem;font-family:var(--m);font-size:.6rem;
+  letter-spacing:.28em;text-transform:uppercase;color:#46525A;text-shadow:none}
+
+/* ── content panels ── */
+.sec{padding:clamp(56px,9vw,110px) clamp(18px,5vw,44px);scroll-margin-top:60px}
+.panel{max-width:730px;margin:0 auto;background:var(--glass);
+  border:1px solid var(--hairline);padding:clamp(28px,5.5vw,56px)}
+.eyebrow{font-family:var(--m);font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--haze);margin:0 0 1.3rem}
+.eyebrow b{color:var(--lantern);font-weight:500}
+h2{font-family:var(--s);font-weight:500;font-size:clamp(1.75rem,5.8vw,2.6rem);
+  line-height:1.12;margin:0 0 1.2rem;text-wrap:balance}
+h2 i{color:var(--dawn)}
+.flow>*+*{margin-top:1.15em}
+.body p{color:#C9C3B6}
+.body em{color:var(--bone)}
+.num{font-family:var(--m);font-variant-numeric:tabular-nums}
+
+/* three-beat cards — a tagged card per beat */
+.moments{display:grid;gap:12px;margin-top:1.9rem}
+.moment{border:1px solid var(--hairline);padding:20px 22px 22px;background:rgba(16,28,23,.5)}
+.moment .tag{font-family:var(--m);font-size:.6rem;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--dawn);display:block;margin-bottom:.6rem}
+.moment p{color:#B9B3A6}
+.moment em{color:var(--bone)}
+
+/* numbered rows — a scannable list with a big numeral per row */
+.rows{margin-top:2rem;border-top:1px solid var(--hairline)}
+.row{display:grid;grid-template-columns:64px 1fr;gap:0 20px;padding:24px 0 26px;
+  border-bottom:1px solid var(--hairline)}
+.row .no{font-family:var(--s);font-style:italic;font-weight:500;font-size:2.6rem;
+  line-height:.9;color:var(--dawn);padding-top:4px}
+.row h3{font-family:var(--s);font-weight:700;font-size:1.12rem;letter-spacing:.02em;margin:0 0 .5rem}
+.row .rowlead{font-style:italic;color:var(--slate);font-size:.93em;margin-bottom:.55rem}
+.row .rowbody{color:#C9C3B6}
+.row .rowbody b{color:var(--lichen);font-weight:400}
+
+/* fact card + stat strip */
+.factcard{border:1px solid var(--hairline);background:rgba(16,28,23,.5);
+  padding:24px 24px 8px;margin-top:1.9rem}
+.factcard .factname{font-family:var(--s);font-weight:700;font-size:1.45rem;line-height:1.1;margin-bottom:.4rem}
+.factcard .sub{font-family:var(--m);font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--slate)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+  background:var(--hairline);margin:20px -24px 0;border-top:1px solid var(--hairline)}
+.stat{background:rgba(10,18,15,.85);padding:16px 24px 18px}
+.stat .v{font-family:var(--m);font-size:1.02rem;font-weight:500;color:var(--lantern);font-variant-numeric:tabular-nums}
+.stat .k{font-family:var(--m);font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;color:var(--slate);margin-top:.35rem}
+
+/* comparison block — a lead row plus three tiers */
+.checks{list-style:none;margin:1rem 0 0;padding:0;display:grid;gap:.45rem}
+.checks li{position:relative;padding-left:1.6em;color:#C9C3B6;font-size:.95em}
+.checks li::before{content:"✓";position:absolute;left:0;top:0;color:var(--lichen);
+  font-family:var(--m);font-weight:500}
+.checks li b{color:var(--lichen);font-weight:400;font-family:var(--m);font-size:.82em;
+  letter-spacing:.08em;text-transform:uppercase}
+
+.compare{margin-top:1.9rem;border:1px solid var(--hairline);background:rgba(16,28,23,.5)}
+.comparehead{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;
+  flex-wrap:wrap;padding:22px 22px 24px;border-bottom:1px solid var(--hairline)}
+.comparehead .lead{flex:1 1 300px}
+.comparehead .tag,.tier .tag{font-family:var(--m);font-size:.6rem;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--dawn);display:block;margin-bottom:.55rem}
+.comparehead p{color:#B9B3A6}
+.comparehead em{color:var(--bone)}
+.bignum{font-family:var(--m);font-size:1.7rem;font-weight:500;color:var(--lantern);
+  font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap;padding-top:.2rem}
+.bignum small{display:block;font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--slate);margin-top:.5rem}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hairline)}
+@media(max-width:600px){.tiers{grid-template-columns:1fr}}
+.tier{background:rgba(10,18,15,.85);padding:20px 20px 22px}
+.tier .p{font-family:var(--m);font-size:1.25rem;font-weight:500;color:var(--lantern);
+  font-variant-numeric:tabular-nums;margin-bottom:.6rem}
+.tier .p small{font-size:.66rem;color:var(--slate)}
+.tier p{color:#B9B3A6;font-size:.92em;line-height:1.55}
+.footline{padding:14px 22px;border-top:1px solid var(--hairline);font-family:var(--m);
+  font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--slate)}
+.footline b{color:var(--bone);font-weight:500}
+
+/* two-column split + pull quote */
+.split{display:grid;gap:12px;margin-top:1.9rem}
+@media(min-width:580px){.split{grid-template-columns:1fr 1fr}}
+.half{border:1px solid var(--hairline);padding:20px 22px 22px;background:rgba(16,28,23,.5)}
+.half .tag{font-family:var(--m);font-size:.6rem;letter-spacing:.26em;text-transform:uppercase;
+  display:block;margin-bottom:.6rem;color:var(--lichen)}
+.half:last-child .tag{color:var(--lantern)}
+.half p{color:#B9B3A6}
+.half em{color:var(--bone)}
+.pull{margin-top:1.7rem;padding:18px 22px;border-left:2px solid var(--lantern);
+  font-style:italic;color:var(--bone);background:rgba(16,28,23,.5)}
+
+/* accented callout — the one emphasized block on the page */
+.callout{border:1px solid var(--lantern);padding:28px 26px 30px;margin-top:1.9rem;background:rgba(16,28,23,.45)}
+.callout .tag{font-family:var(--m);font-size:.6rem;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--lantern);display:block;margin-bottom:.8rem}
+.callout p{font-size:1.06em;color:#D8D2C5}
+.callout p+p{margin-top:.95em}
+.callout em{color:var(--bone)}
+
+/* footer */
+footer{position:relative;z-index:1;padding:clamp(60px,10vw,120px) clamp(18px,5vw,44px) 80px;text-align:center}
+footer .sig{font-family:var(--s);font-style:italic;font-weight:500;
+  font-size:clamp(1.25rem,3.6vw,1.7rem);color:var(--bone);text-shadow:0 2px 30px rgba(6,10,9,.6)}
+footer .co{font-family:var(--m);font-size:.6rem;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--haze);margin-top:1.4rem}
+footer .fine{max-width:560px;margin:2.6rem auto 0;font-size:.76rem;line-height:1.65;
+  color:var(--slate);border-top:1px solid var(--hairline);padding-top:1.1rem}
+
+/* reveals — hidden ONLY when JS runs (progressive enhancement; page reads fine with JS off) */
+.js .rv{opacity:0;transform:translateY(22px);transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+.js .rv.on{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.js .rv{opacity:1;transform:none;transition:none}}
+</style>
+<script>document.documentElement.className+=' js';</script>
+</head>
+<body>
+
+<!-- The animated background. A CSS gradient on #sky is the fallback for
+     no-JS, no-WebGL, and shader-compile-failure alike. aria-hidden because
+     it is decoration. See docs/SCROLL-SCENE.md. -->
+<canvas id="sky" aria-hidden="true"></canvas>
+
+<nav>
+  <span class="brand">{{BRAND_A}} <i>· {{BRAND_B}}</i></span>
+  <ul>
+    <li><a href="#three">Section</a></li>
+    <li><a href="#rows">Section</a></li>
+    <li><a href="#facts">Section</a></li>
+    <li><a href="#compare">Section</a></li>
+  </ul>
+  <a class="pill" href="#close">{{NAV_CTA}}</a>
+</nav>
+
+<main>
+
+  <!-- ─── FRAME 1 · HERO ────────────────────────────────────────────────
+       One job: say what this page is, in the fewest words that can carry
+       it. Full viewport, centered, nothing else competing.
+       .rv = revealed on scroll (progressive enhancement only — the base
+       CSS leaves it visible, so a failed script never blanks the page). -->
+  <section class="frame">
+    <div>
+      <p class="kicker rv">{{KICKER}}</p>
+      <h1 class="rv">{{H1_LINE1}}<br>{{H1_LINE2}}</h1>
+      <p class="hero-sub rv">{{HERO_SUB_1}}<br><b>{{HERO_SUB_2}}</b></p>
+      <div class="rv"><a class="ghost" href="#hook">{{HERO_CTA}}</a></div>
+    </div>
+    <p class="cue">Scroll</p>
+  </section>
+
+  <!-- ─── FRAME 2 · THE IDEA, STATED ────────────────────────────────────
+       One sentence, large, with one phrase in accent italics. This is
+       where the scroll-driven scene is doing its first phase change, so
+       what the words say should match what the background is doing. -->
+  <section class="frame" id="hook">
+    <p class="inter rv">[ONE SENTENCE — the idea in its plainest form, with
+    one phrase set in <i>accent italics</i>.]
+    <small>[A SHORT ATTRIBUTION OR CONTEXT LINE]</small></p>
+  </section>
+
+  <!-- ─── FRAME 3 · THE CONSEQUENCE ─────────────────────────────────────
+       The second interstitial. Frame 2 stated it; this one says why it
+       matters. If this needs two sentences, the idea isn't sharp yet. -->
+  <section class="frame">
+    <p class="inter rv">[ONE SENTENCE — what follows from it:
+    <i>the turn, the stake, the implication.</i>]
+    <small>[THE STAKES, IN SIX WORDS OR SO]</small></p>
+  </section>
+
+  <!-- ─── PANEL · PROSE ─────────────────────────────────────────────────
+       First glass panel over the darkening background. Three paragraphs
+       is the natural length: context, the substance, the forward look.
+       .flow handles the vertical rhythm; don't add margins to <p>. -->
+  <section class="sec" id="intro">
+    <div class="panel rv">
+      <p class="eyebrow">Section · <b>Label</b></p>
+      <h2>A heading that <i>carries</i> the section</h2>
+      <div class="flow body">
+        <p>[PARAGRAPH ONE — context. Establish the ground the rest stands on.]</p>
+        <p>[PARAGRAPH TWO — the substance. The specific thing this section exists to say.]</p>
+        <p>[PARAGRAPH THREE — the forward look. Why it matters from here, ending on
+        the note the next section picks up.]</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PANEL · THREE-BEAT CARDS ──────────────────────────────────────
+       For any argument with exactly three parts (before/during/after,
+       problem/method/result). Three is the number that reads as complete
+       without feeling like a list. Each card ends on an italic line. -->
+  <section class="sec" id="three">
+    <div class="panel rv">
+      <p class="eyebrow">Section · <b>Label</b></p>
+      <h2>Three beats, <i>one</i> idea</h2>
+      <div class="flow body"><p>[ONE-SENTENCE SETUP for the three cards below.]</p></div>
+      <div class="moments">
+        <div class="moment">
+          <span class="tag">Beat one</span>
+          <p>[WHAT HAPPENS FIRST. <em>The line that lands it.</em>]</p>
+        </div>
+        <div class="moment">
+          <span class="tag">Beat two</span>
+          <p>[WHAT HAPPENS NEXT. <em>The line that lands it.</em>]</p>
+        </div>
+        <div class="moment">
+          <span class="tag">Beat three</span>
+          <p>[WHERE IT ENDS UP. <em>The line that lands it.</em>]</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PANEL · NUMBERED ROWS ─────────────────────────────────────────
+       A scannable list where each item has a big numeral, a title, a
+       lead line, and a body line. Works for principles, steps, criteria.
+       Five is a good maximum — past that it stops being scannable. -->
+  <section class="sec" id="rows">
+    <div class="panel rv">
+      <p class="eyebrow">Section · <b>Label</b></p>
+      <h2>The list, <i>numbered</i></h2>
+      <div class="rows">
+        <div class="row">
+          <div class="no">1</div>
+          <div>
+            <h3>[ITEM TITLE]</h3>
+            <p class="rowlead">[THE LEAD LINE — the claim, in italics.]</p>
+            <p class="rowbody">[THE BODY LINE, with the <b>key value</b> emphasized.]</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="no">2</div>
+          <div>
+            <h3>[ITEM TITLE]</h3>
+            <p class="rowlead">[THE LEAD LINE.]</p>
+            <p class="rowbody">[THE BODY LINE, with the <b>key value</b> emphasized.]</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="no">3</div>
+          <div>
+            <h3>[ITEM TITLE]</h3>
+            <p class="rowlead">[THE LEAD LINE.]</p>
+            <p class="rowbody">[THE BODY LINE, with the <b>key value</b> emphasized.]</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PANEL · FACT CARD + STAT STRIP ────────────────────────────────
+       Evidence, with the numbers on the page rather than described. Use
+       tabular figures (.num) so digits align. Every figure gets a source
+       and an as-of date in the footer's fine print — undated numbers
+       become folklore. -->
+  <section class="sec" id="facts">
+    <div class="panel rv">
+      <p class="eyebrow">Section · <b>Label</b></p>
+      <h2>Evidence, <i>with</i> the numbers</h2>
+      <div class="factcard">
+        <div class="factname">[THE NAMED THING]</div>
+        <div class="sub">[Its short qualifier]</div>
+        <div class="stats">
+          <div class="stat"><div class="v num">[VALUE]</div><div class="k">[Label]</div></div>
+          <div class="stat"><div class="v num">[VALUE]</div><div class="k">[Label]</div></div>
+          <div class="stat"><div class="v num">[VALUE]</div><div class="k">[Label]</div></div>
+        </div>
+      </div>
+      <div class="flow body" style="margin-top:1.6rem">
+        <p>[ONE PARAGRAPH — what the numbers mean. Don't restate them; interpret them.]</p>
+      </div>
+      <ul class="checks">
+        <li><b>Included</b> [a checklist item]</li>
+        <li><b>Included</b> [a checklist item]</li>
+        <li><b>Included</b> [a checklist item]</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ─── PANEL · COMPARISON ────────────────────────────────────────────
+       A lead row with one big number, then three tiers. The screenshot
+       section: written so it survives being sent onward without you in
+       the room. Printed values beat "it depends." -->
+  <section class="sec" id="compare">
+    <div class="panel rv">
+      <p class="eyebrow">Section · <b>Label</b></p>
+      <h2>The options, <i>side by side</i></h2>
+      <div class="compare">
+        <div class="comparehead">
+          <div class="lead">
+            <span class="tag">The headline option</span>
+            <p>[WHAT IT IS, in one sentence. <em>The part that matters.</em>]</p>
+          </div>
+          <div class="bignum">[VALUE]<small>[unit or qualifier]</small></div>
+        </div>
+        <div class="tiers">
+          <div class="tier">
+            <span class="tag">Tier one</span>
+            <div class="p">[VALUE]<small>[/unit]</small></div>
+            <p>[WHAT THIS TIER GETS YOU, in one sentence.]</p>
+          </div>
+          <div class="tier">
+            <span class="tag">Tier two</span>
+            <div class="p">[VALUE]<small>[/unit]</small></div>
+            <p>[WHAT THIS TIER GETS YOU, in one sentence.]</p>
+          </div>
+          <div class="tier">
+            <span class="tag">Tier three</span>
+            <div class="p">[VALUE]<small>[/unit]</small></div>
+            <p>[WHAT THIS TIER GETS YOU, in one sentence.]</p>
+          </div>
+        </div>
+        <div class="footline">[A CLOSING CONDITION] · <b>[the emphasized part]</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── PANEL · SPLIT + PULL QUOTE ────────────────────────────────────
+       Two halves for anything with two sides (this/that, you/me,
+       before/after), then one pull quote to close the thought. -->
+  <section class="sec" id="split">
+    <div class="panel rv">
+      <p class="eyebrow">Section · <b>Label</b></p>
+      <h2>Two sides of <i>the same</i> thing</h2>
+      <div class="split">
+        <div class="half">
+          <span class="tag">Side one</span>
+          <p>[WHAT THIS SIDE IS. <em>Its distinguishing line.</em>]</p>
+        </div>
+        <div class="half">
+          <span class="tag">Side two</span>
+          <p>[WHAT THIS SIDE IS. <em>Its distinguishing line.</em>]</p>
+        </div>
+      </div>
+      <p class="pull">[THE PULL QUOTE — the sentence you'd want remembered
+      if the reader kept only one.]</p>
+    </div>
+  </section>
+
+  <!-- ─── PANEL · CALLOUT / CLOSE ───────────────────────────────────────
+       The one accented block on the page — an accent border instead of a
+       hairline, so it reads as the destination. Whatever the page is
+       asking for goes here, stated as a decision rather than a meeting. -->
+  <section class="sec" id="close">
+    <div class="panel rv">
+      <p class="eyebrow">Section · <b>Label</b></p>
+      <h2>The <i>close</i></h2>
+      <div class="callout">
+        <span class="tag">What happens next</span>
+        <p>[THE SPECIFIC THING BEING ASKED FOR — small, fast, and measurable.
+        <em>Name the criterion that says it worked.</em>]</p>
+        <p>[THE SECOND PARAGRAPH — what the timeline is, and what the reader
+        has to do to start.]</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p class="sig">{{FOOTER_SIG_1}}<br>{{FOOTER_SIG_2}}</p>
+  <p class="co">{{FOOTER_ORG}}</p>
+  <!-- Fine print. Every figure on the page gets a source and an as-of date
+       here. A number without a date can't be re-checked, and becomes
+       folklore. Illustrative examples get flagged as illustrative. -->
+  <p class="fine">[FINE PRINT — source and as-of date for every figure above;
+  any illustrative example flagged as illustrative; the one factual note
+  behind the page's central image or metaphor.]</p>
+</footer>
+
+<script>
+// The scroll-driven background scene. Three uniforms: resolution, time, and
+// scroll progress 0->1 — everything the scene does is a function of scroll.
+// Fully annotated, with the knob table and the reskin recipe, in
+// docs/SCROLL-SCENE.md. The reference scene here is dusk falling over a
+// ridge line while scattered lights converge into one rhythm; replace only
+// the layer math inside main() to tell a different story.
+(function(){
+  var canvas = document.getElementById('sky');
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var gl = canvas.getContext('webgl', {antialias:false, alpha:false, powerPreference:'high-performance'});
+  if(!gl){ canvas.style.display='none'; return; }
+
+  var VSH = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  var FSH = [
+  'precision highp float;',
+  'uniform vec2 uR;uniform float uT;uniform float uS;',
+  'float h21(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}',
+  'float n2(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);',
+  ' float a=h21(i),b=h21(i+vec2(1.,0.)),c=h21(i+vec2(0.,1.)),d=h21(i+vec2(1.,1.));',
+  ' return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);}',
+  'float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n2(p);p=p*2.03+vec2(17.3,9.1);a*=.5;}return v;}',
+  'void main(){',
+  ' vec2 uv=gl_FragCoord.xy/uR;',
+  ' float asp=uR.x/uR.y;',
+  ' float s=uS;',
+  ' float night=smoothstep(.12,.72,s);',   // dusk falls as you scroll
+  ' float glow=smoothstep(.30,.55,s);',    // fireflies wake
+  ' float sync=smoothstep(.55,.96,s);',    // ...then fall into step
+  ' float hor=.42;',
+  // ---- sky: dusk into night ----
+  ' vec3 top=mix(vec3(.10,.16,.26),vec3(.008,.020,.028),night);',
+  ' vec3 low=mix(vec3(.82,.53,.30),vec3(.05,.10,.14),night);',
+  ' vec3 col=mix(low,top,smoothstep(hor-.06,1.02,uv.y));',
+  // afterglow where the sun went down
+  ' vec2 sun=vec2(.32,hor);vec2 sd=uv-sun;sd.x*=asp*.85;',
+  ' col+=vec3(1.,.70,.40)*exp(-8.5*length(sd))*(1.-night)*.75;',
+  ' col+=vec3(1.,.85,.60)*exp(-32.*length(sd))*(1.-night)*.85;',
+  // stars arrive with the dark
+  ' vec2 sc=floor(gl_FragCoord.xy/2.);',
+  ' float tw=step(.9988,h21(sc))*(.25+.75*h21(sc+7.7));',
+  ' col+=tw*smoothstep(.48,.95,uv.y)*night*.9;',
+  // thin drifting cloud, dissolving at night
+  ' float tm=fbm(vec2(uv.x*1.8*asp+uT*.008,uv.y*3.2+21.))*smoothstep(.5,.95,uv.y);',
+  ' col+=vec3(.75,.65,.55)*tm*.11*(1.-night*.75);',
+  // ---- the blue-smoke ridge stack ----
+  ' for(int i=0;i<6;i++){',
+  '  float fi=float(i);',
+  '  float dp=fi/5.;',
+  '  float base=hor+.015-fi*.076;',
+  '  float rh=fbm(vec2(uv.x*(1.4+fi*.85)*asp+fi*7.31,fi*3.7))*.13*(1.-fi*.05);',
+  '  float m=smoothstep(.004,-.004,uv.y-(base+rh));',
+  '  vec3 rcd=mix(vec3(.50,.55,.66),vec3(.055,.095,.075),pow(dp,.85));',
+  '  vec3 rcn=mix(vec3(.09,.14,.19),vec3(.012,.026,.021),pow(dp,.85));',
+  '  vec3 rc=mix(rcd,rcn,night);',
+  '  rc+=vec3(.85,.50,.30)*exp(-3.2*abs(uv.x-sun.x))*(1.-dp)*(1.-night)*.30;',
+  '  col=mix(col,rc,m);',
+  '  float band=exp(-abs(uv.y-(base+rh+.016))*48.);',
+  '  float mist=fbm(vec2(uv.x*2.3*asp+fi*3.1+uT*.016,uv.y*11.-fi*5.));',
+  '  col+=vec3(.80,.85,.91)*band*mist*.20*(1.-dp*.5)*(1.-night*.55);',
+  ' }',
+  // steady warm lights on the near ridges (the constant amid the blinking)
+  ' float lit=smoothstep(.42,.80,s);',
+  ' vec2 lp1=vec2(.30,.135),lp2=vec2(.67,.175);',
+  ' vec2 q=(uv-lp1);q.x*=asp;col+=vec3(.95,.62,.22)*exp(-dot(q,q)*12000.)*lit*.6;',
+  ' q=(uv-lp2);q.x*=asp;col+=vec3(.95,.62,.22)*exp(-dot(q,q)*15000.)*lit*.5;',
+  ' q=(uv-lp1);q.x*=asp;col+=vec3(.85,.50,.18)*exp(-dot(q,q)*320.)*lit*.035;',
+  // ---- the fireflies: scattered blinks that fall into one rhythm ----
+  ' if(glow>0.){',
+  '  vec2 gp=vec2(uv.x*asp,uv.y)*13.;',
+  '  vec2 id=floor(gp);',
+  '  float fl=0.;',
+  '  for(int dy=-1;dy<=1;dy++)for(int dx=-1;dx<=1;dx++){',
+  '   vec2 cid=id+vec2(float(dx),float(dy));',
+  '   float r=h21(cid);',
+  '   if(r>.80){',
+  '    vec2 pos=cid+vec2(h21(cid+3.1),h21(cid+5.7))',
+  '      +.16*vec2(sin(uT*.5+r*50.),cos(uT*.4+r*30.));',
+  '    vec2 dv=gp-pos;',
+  '    float dd=dot(dv,dv);',
+  '    float fw=mix(.20+.14*h21(cid+9.3),.30,sync);',
+  '    float fp=mix(h21(cid+4.2),0.,sync);',
+  '    float fc=fract(uT*fw+fp);',
+  '    float pulse=smoothstep(.00,.045,fc)*(1.-smoothstep(.10,.19,fc));',
+  '    fl+=pulse*(exp(-dd*90.)+exp(-dd*16.)*.22);',
+  '   }',
+  '  }',
+  '  float bandm=smoothstep(.56,.38,uv.y)*smoothstep(-.02,.07,uv.y);',
+  '  col+=vec3(.80,.94,.38)*fl*glow*bandm*.95;',
+  ' }',
+  // grain + vignette
+  ' col+=(h21(gl_FragCoord.xy+fract(uT)*61.7)-.5)*.05;',
+  ' vec2 vc=uv-.5;vc.x*=asp*.8;',
+  ' col*=mix(.72,1.,smoothstep(1.15,.42,length(vc)));',
+  ' gl_FragColor=vec4(col,1.);',
+  '}'].join('\n');
+
+  function sh(type,src){var o=gl.createShader(type);gl.shaderSource(o,src);gl.compileShader(o);
+    if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)){canvas.style.display='none';throw gl.getShaderInfoLog(o);}return o;}
+  var prog=gl.createProgram();
+  gl.attachShader(prog,sh(gl.VERTEX_SHADER,VSH));
+  gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FSH));
+  gl.linkProgram(prog);gl.useProgram(prog);
+  var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  var loc=gl.getAttribLocation(prog,'p');gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  var uRl=gl.getUniformLocation(prog,'uR'),uTl=gl.getUniformLocation(prog,'uT'),uSl=gl.getUniformLocation(prog,'uS');
+
+  var W=0,H=0;
+  function resize(){
+    var dpr=Math.min(window.devicePixelRatio||1,(window.innerWidth<700)?1.25:1.6);
+    W=Math.round(window.innerWidth*dpr);H=Math.round(window.innerHeight*dpr);
+    canvas.width=W;canvas.height=H;gl.viewport(0,0,W,H);
+  }
+  resize();addEventListener('resize',resize);
+
+  var S=0,tgt=0,t0=performance.now();
+  function target(){
+    var vh=window.innerHeight;
+    // 3.1 viewport-heights of scroll drive the full dusk-to-sync arc;
+    // raise the divisor if you add sections and want a slower night.
+    return Math.min(1,(window.scrollY||document.documentElement.scrollTop)/(vh*3.1));
+  }
+  function frame(now){
+    tgt=target();
+    S+=(tgt-S)*.07;
+    gl.uniform2f(uRl,W,H);
+    gl.uniform1f(uTl,(now-t0)/1000);
+    gl.uniform1f(uSl,S);
+    gl.drawArrays(gl.TRIANGLES,0,3);
+    requestAnimationFrame(frame);
+  }
+  if(reduce){
+    var draw=function(){gl.uniform2f(uRl,W,H);gl.uniform1f(uTl,40.);gl.uniform1f(uSl,target());gl.drawArrays(gl.TRIANGLES,0,3);};
+    addEventListener('scroll',draw,{passive:true});addEventListener('resize',draw);draw();
+  }else{
+    requestAnimationFrame(frame);
+  }
+
+  // nav: hide while scrolling down, return on scroll up
+  var navEl=document.querySelector('nav'),lastY=0;
+  addEventListener('scroll',function(){
+    var y=window.scrollY||document.documentElement.scrollTop;
+    if(y>lastY+6 && y>window.innerHeight*.5){navEl.classList.add('hide');}
+    else if(y<lastY-6 || y<window.innerHeight*.5){navEl.classList.remove('hide');}
+    lastY=y;
+  },{passive:true});
+
+  // reveals
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target);}});
+  },{threshold:.18});
+  document.querySelectorAll('.rv').forEach(function(el){io.observe(el);});
+})();
+</script>
+
+</body>
+</html>
