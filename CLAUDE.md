@@ -26,6 +26,7 @@ the authority on its scope — this table just routes you there.
 | pointing a domain, moving a site, not killing anyone's email | `docs/DNS-RUNBOOK.md` |
 | building or shipping an actual page | `tools/README.md`, then `template/` |
 | starting a new build, or building many at once | `docs/BUILD-PROTOCOL.md` |
+| turning a rough description into an archetype + facts contract | `tools/brief.py` |
 | absorbing saved pages / zip archives into technique | `docs/INTAKE.md` |
 | what's already been extracted and kept | `library/README.md` |
 | why a house rule exists, before arguing with it | `docs/LINEAGE.md` |

@@ -1,6 +1,6 @@
 # The toolchain
 
-Eight small programs, in three directions. No `package.json`, no lockfile,
+Nine small programs, in three directions. No `package.json`, no lockfile,
 no framework. Python stdlib only except the optional QA pass, which wants
 Playwright.
 
@@ -16,6 +16,17 @@ distinct.py        a set of sites -> how alike they really are. Copy,
                    structure, headline shape and assets, pair by pair.
                    --network also flags a family too loose to read as one.
                    --policy reads the thresholds from a JSON file.
+```
+
+**Starting a build** — a description to a brief the gate can act on:
+
+```
+brief.py           what the build is -> archetype (Phase 0), facts
+                   contract (Phase 1), and the exact preflight command.
+                   Never invents a fact: what it can't find stays a
+                   marked ⟨blank⟩. Refuses to pick the archetype when
+                   two purposes compete, because a wrong archetype
+                   makes the gate enforce the wrong failures.
 ```
 
 **Checking claims** — asserted to verified:
