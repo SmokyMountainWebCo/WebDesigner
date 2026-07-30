@@ -1,6 +1,6 @@
 # The toolchain
 
-Seven small programs, in two directions. No `package.json`, no lockfile,
+Eight small programs, in three directions. No `package.json`, no lockfile,
 no framework. Python stdlib only except the optional QA pass, which wants
 Playwright.
 
@@ -16,6 +16,16 @@ distinct.py        a set of sites -> how alike they really are. Copy,
                    structure, headline shape and assets, pair by pair.
                    --network also flags a family too loose to read as one.
                    --policy reads the thresholds from a JSON file.
+```
+
+**Checking claims** — asserted to verified:
+
+```
+linkcheck.py       a docs tree -> every external link loaded for real.
+                   DEAD (a 404) fails the run; BLOCKED (a server refusing
+                   a bot) and UNREACHABLE (a 5xx or a network fault) do
+                   not, because neither means the citation is wrong.
+                   Skips XML namespaces — those are names, not addresses.
 ```
 
 **Absorbing inward** — saved pages to reusable technique:
@@ -153,9 +163,10 @@ Worth adding when you need it, in rough order of payoff:
 - **OG image generation** — render an HTML card at 1200×630 headlessly to
   PNG. `check.js` already has the screenshot mechanics; it's about ten
   lines.
-- **A link checker** — `check.js` already collects every outbound href;
-  fetching each one and asserting a 200 is a small addition, and a dead
-  link in a shipped page is embarrassing in a way nothing else is.
+- **Link-checking a built page** — `linkcheck.py` covers docs trees;
+  wiring `check.js`'s collected hrefs into the same prober would extend
+  it to shipped pages, where a dead link is embarrassing in a way nothing
+  else is.
 - **An `axe-core` pass** — inject the script, run it, fail the build on
   serious violations.
 - **Brotli pre-compression** of the output, if you're serving it yourself

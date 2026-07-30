@@ -29,6 +29,7 @@ the authority on its scope — this table just routes you there.
 | absorbing saved pages / zip archives into technique | `docs/INTAKE.md` |
 | what's already been extracted and kept | `library/README.md` |
 | why a house rule exists, before arguing with it | `docs/LINEAGE.md` |
+| checking that every citation in a docs tree still resolves | `tools/linkcheck.py` |
 
 ## House rules
 
@@ -46,7 +47,11 @@ the authority on its scope — this table just routes you there.
 - **Verify before asserting.** Don't claim a feature is supported without
   checking `caniuse.com`; don't claim a page is fast without a throttled
   measurement; don't claim a link works without loading it. Run
-  `tools/check.js` before saying a built page is done.
+  `tools/check.js` before saying a built page is done, and
+  `tools/linkcheck.py docs/` before trusting a citation — it loads every
+  link for real, and reports DEAD separately from a server refusing a bot
+  (BLOCKED) or failing (UNREACHABLE), because only the first means the
+  source is actually gone.
 - **Prefer the platform to a dependency.** Check MDN before adding a
   library. `:has()`, `<dialog>`, container queries, `clamp()`, scroll-driven
   animations, and OKLCH all moved from library to built-in recently, and
