@@ -33,6 +33,10 @@ RE_STYLE   = re.compile(r"<style[^>]*>(.*?)</style>", re.I | re.S)
 RE_SCRIPT  = re.compile(r"<script(?![^>]+application/ld\+json)[^>]*>(.*?)</script>", re.I | re.S)
 RE_LINKTAG = re.compile(r"<link\s+([^>]+?)/?>", re.I)
 RE_SCRIPTTAG = re.compile(r"<script\s+([^>]*?src\s*=[^>]*?)/?>", re.I)
+# Tags whose src/href causes the browser to fetch something.
+RE_FETCHTAG = re.compile(r"<(script|link|img|iframe|video|audio|source|track|embed|object|use)\s+([^>]+?)/?>", re.I)
+FETCHING_REL = {"stylesheet", "preload", "prefetch", "preconnect", "dns-prefetch",
+                "modulepreload", "icon", "apple-touch-icon", "manifest", "prerender"}
 
 RE_HEX     = re.compile(r"#([0-9a-fA-F]{3,8})\b")
 RE_RGB     = re.compile(r"\brgba?\(\s*([\d.]+%?)\s*[, ]\s*([\d.]+%?)\s*[, ]\s*([\d.]+%?)", re.I)
@@ -308,7 +312,29 @@ def harvest(path, follow_local=True):
             stacks[decl] += 1
 
     # ── dependencies on other origins ────────────────────────────────────
-    refs = [g1 or g2 for g1, g2 in RE_URLREF.findall(text)]
+    # Only references that actually cause a fetch. An <a href>, a
+    # rel=canonical, and an og:url are navigation and metadata — counting
+    # them as dependencies inflates the number that's supposed to drive
+    # "what should I self-host", and a self-contained page reads as though
+    # it had nine third parties.
+    refs, link_refs = [], []
+    for m in RE_FETCHTAG.finditer(text):
+        tag = m.group(1).lower()
+        a = attrs(m.group(2))
+        if tag == "link":
+            rel = a.get("rel", "").lower()
+            if not (FETCHING_REL & set(rel.split())):
+                continue
+            ref = a.get("href")
+        else:
+            ref = a.get("src") or a.get("srcset", "").split(",")[0].strip().split(" ")[0]
+        if ref:
+            refs.append(ref)
+    for m in re.finditer(r"<a\b([^>]*)>", text, re.I):
+        href = attrs(m.group(1)).get("href", "")
+        o = origin_of(href)
+        if o:
+            link_refs.append(o)
     refs += RE_CSSURL.findall(css) + RE_IMPORT.findall(css)
     origins = Counter()
     for r in refs:
@@ -317,6 +343,7 @@ def harvest(path, follow_local=True):
         o = origin_of(r)
         if o:
             origins[o] += 1
+    outbound = Counter(link_refs)
 
     # ── techniques and flags ─────────────────────────────────────────────
     whole = text
@@ -430,6 +457,7 @@ def harvest(path, follow_local=True):
             "stacks": stacks.most_common(8),
         },
         "dependencies": {"origins": origins.most_common(), "count": sum(origins.values())},
+        "outbound_links": {"origins": outbound.most_common(), "count": sum(outbound.values())},
         "techniques": techniques,
         "flags": flags,
         "shaders": shaders,

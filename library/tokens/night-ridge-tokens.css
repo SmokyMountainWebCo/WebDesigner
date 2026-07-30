@@ -1,0 +1,63 @@
+/* Night ridge — token set for a dark editorial page.
+   Source:  original
+   License: n/a — measurements only
+   Date:    2026-07-30
+   What:    Colors, type stacks and the scales that go with the
+            library/palettes/night-ridge.md palette. Paste, then rename
+            the roles to whatever the project calls them. */
+
+:root{
+  /* ground and text ------------------------------------------------- */
+  --ground:      #0A1210;   /* oklch(17.3% .013 177.5) page background   */
+  --raised:      #101C17;   /* oklch(21.3% .020 166.7) panels, cards     */
+  --panel:       rgba(8,15,12,.80);        /* over imagery or a shader   */
+  --text:        #EDE6D8;   /* oklch(92.7% .020  84.6) ~15.6:1 on ground */
+  --muted-cool:  #93A7B4;   /* oklch(71.7% .029 236.4) labels            */
+  --muted-warm:  #7E8F89;   /* oklch(63.5% .022 172.4) captions          */
+  --hairline:    rgba(147,167,180,.22);    /* edges, never a lighter grey*/
+
+  /* accents — one per viewport -------------------------------------- */
+  --accent:      #E9A63C;   /* oklch(77.2% .141  74.7) links, focus, CTA */
+  --accent-soft: #E8B98A;   /* oklch(81.7% .082  66.2) italic emphasis   */
+  --accent-alt:  #9BBD7E;   /* oklch(75.8% .094 131.4) confirmations     */
+
+  /* type ------------------------------------------------------------- */
+  --display: 'Playfair Display', Georgia, serif;   /* headings only      */
+  --body:    'Newsreader', Georgia, serif;         /* running text       */
+  --label:   'IBM Plex Mono', ui-monospace, monospace; /* eyebrows, nums */
+
+  /* Fluid body size. The page scales between two fixed ends rather than
+     tracking the viewport all the way down, so small screens stay
+     readable and large ones stop growing. */
+  --size-body: clamp(16.5px, 1.1vw, 18px);
+  --size-h1:   clamp(2.9rem, 10.5vw, 5.6rem);
+  --size-h2:   clamp(1.75rem, 5.8vw, 2.6rem);
+  --size-h3:   1.12rem;
+  --size-label: .6rem;      /* with letter-spacing .26em, uppercase      */
+  --leading-body: 1.68;
+  --leading-tight: 1.12;
+
+  /* space — a 2px-grid ladder, not a ratio ---------------------------- */
+  --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+  --s5: 22px; --s6: 32px; --s7: 44px; --s8: 64px;
+  --gutter:  clamp(18px, 5vw, 44px);
+  --section: clamp(56px, 9vw, 110px);
+  --measure: 730px;         /* panel max-width; ~68ch at body size       */
+}
+
+/* The label face carries every small uppercase run. Tracking is what
+   makes 0.6rem monospace legible rather than cramped — without it this
+   size reads as noise. */
+.label{
+  font-family: var(--label);
+  font-size: var(--size-label);
+  letter-spacing: .26em;
+  text-transform: uppercase;
+}
+
+/* Numbers that sit in columns must not reflow as they change. */
+.num{ font-family: var(--label); font-variant-numeric: tabular-nums }
+
+/* Focus is a requirement, not a decoration. If a control sets
+   outline:none for its own look, it still owes a :focus-visible ring. */
+:focus-visible{ outline: 2px solid var(--accent); outline-offset: 3px }
