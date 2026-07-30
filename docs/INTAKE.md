@@ -61,7 +61,8 @@ Answers *what's in here worth keeping.* Per page it pulls:
 | **Shaders** | Inline GLSL: size, uniform names, whether it uses noise and `smoothstep`, loop count |
 | **Distribution** | Title, description, `robots`, the Open Graph and Twitter tag sets, JSON-LD `@type`s |
 | **Accessibility** | `lang`, alt coverage, images with explicit dimensions, heading level skips, labelled inputs, whether zoom is disabled |
-| **Weight** | Total bytes split into markup, inline CSS, inline JS, and base64 payload; whether the page is fully self-contained |
+| **Weight** | Total bytes split into markup, inline CSS, inline JS, linked CSS/JS, and base64 payload; whether the page is fully self-contained |
+| **Linked** | Which local stylesheets and scripts were folded in, and any local reference that couldn't be resolved |
 
 Output: one JSON per page, a `corpus.json`, and `REPORT.md` — a
 corpus-wide roll-up that ranks the palette, shows technique adoption as a
@@ -180,12 +181,14 @@ The harvester is regex over markup and CSS. It's fast, it needs no
 dependencies, it never executes anything — and that buys it these blind
 spots:
 
-- **External stylesheets aren't followed.** A page whose CSS lives in
-  `styles.css` yields little palette or token data unless that file was
-  saved alongside it. Saved-page folders (`Page Title_files/`) usually
-  include it — ingest keeps them; harvest currently reads only the HTML.
-  Concatenating a page's saved CSS into it before harvesting is a fair
-  workaround.
+- **Stylesheets from other origins aren't fetched.** Harvest reads the
+  page's own folder — including the `Page Title_files/` sidecar a browser
+  writes on "Save Page As → Complete", which is where a saved page keeps
+  every color, token, and technique — plus one level of `@import`. It
+  never goes to the network. A page whose CSS is on a CDN and wasn't
+  saved alongside it will report that href under `linked.unresolved` and
+  harvest thin; save the page complete, or fetch the stylesheet into the
+  folder yourself. `--no-follow` turns the whole behavior off.
 - **JS-rendered pages yield only the shell.** Anything a framework paints
   at runtime isn't in the saved markup, which is the same reason crawlers
   miss it (`MASTERING-THE-INTERNET.md`).

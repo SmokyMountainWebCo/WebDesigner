@@ -20,6 +20,7 @@ without needing a parser, and never executes anything.
 """
 import argparse, json, os, re, sys
 from collections import Counter
+from urllib.parse import unquote
 from datetime import datetime, timezone
 
 # ── extraction patterns ───────────────────────────────────────────────────
@@ -30,6 +31,8 @@ RE_LANG    = re.compile(r"<html[^>]*\blang\s*=\s*[\"']([^\"']+)", re.I)
 RE_JSONLD  = re.compile(r"<script[^>]+application/ld\+json[^>]*>(.*?)</script>", re.I | re.S)
 RE_STYLE   = re.compile(r"<style[^>]*>(.*?)</style>", re.I | re.S)
 RE_SCRIPT  = re.compile(r"<script(?![^>]+application/ld\+json)[^>]*>(.*?)</script>", re.I | re.S)
+RE_LINKTAG = re.compile(r"<link\s+([^>]+?)/?>", re.I)
+RE_SCRIPTTAG = re.compile(r"<script\s+([^>]*?src\s*=[^>]*?)/?>", re.I)
 
 RE_HEX     = re.compile(r"#([0-9a-fA-F]{3,8})\b")
 RE_RGB     = re.compile(r"\brgba?\(\s*([\d.]+%?)\s*[, ]\s*([\d.]+%?)\s*[, ]\s*([\d.]+%?)", re.I)
@@ -149,15 +152,91 @@ def origin_of(url):
     return m.group(1).lower() if m else None
 
 
-def harvest(path):
+def read_text(path):
     raw = open(path, "rb").read()
     try:
-        text = raw.decode("utf-8")
+        return raw.decode("utf-8"), len(raw)
     except UnicodeDecodeError:
-        text = raw.decode("latin-1", errors="replace")
+        return raw.decode("latin-1", errors="replace"), len(raw)
+
+
+def local_target(ref, base_dir):
+    """Resolve a page-relative asset reference to a real file, or None.
+
+    Browsers save a page as `Page Title.html` plus a `Page Title_files/`
+    folder, so the CSS that holds every color, token and technique lives
+    beside the markup rather than in it. Absolute URLs, protocol-relative
+    URLs, data: URIs and site-root paths can't be resolved from disk and
+    are skipped — which also means this never reaches outside the folder
+    the page was saved into.
+    """
+    ref = ref.strip().split("#")[0].split("?")[0]
+    if not ref or ref.startswith(("data:", "//", "/", "\\")) or re.match(r"^[a-zA-Z][\w+.-]*:", ref):
+        return None
+    cand = os.path.normpath(os.path.join(base_dir, unquote(ref)))
+    return cand if os.path.isfile(cand) else None
+
+
+def gather_linked(text, base_dir, depth=1):
+    """Pull in stylesheets and scripts the page links to from its own folder."""
+    css_files, js_files, missing = [], [], []
+    css_text, js_text = [], []
+
+    for tag in RE_LINKTAG.findall(text):
+        a = attrs(tag)
+        rel = a.get("rel", "").lower()
+        if "stylesheet" not in rel or not a.get("href"):
+            continue
+        target = local_target(a["href"], base_dir)
+        if not target:
+            if not re.match(r"^(?:https?:)?//", a["href"].strip()):
+                missing.append(a["href"])
+            continue
+        body, nbytes = read_text(target)
+        css_files.append({"path": os.path.relpath(target, base_dir), "bytes": nbytes})
+        css_text.append(body)
+        # One level of @import, which saved pages and font sheets lean on.
+        if depth > 0:
+            for imp in RE_IMPORT.findall(body):
+                sub = local_target(imp, os.path.dirname(target))
+                if sub:
+                    sbody, sbytes = read_text(sub)
+                    css_files.append({"path": os.path.relpath(sub, base_dir), "bytes": sbytes})
+                    css_text.append(sbody)
+
+    for tag in RE_SCRIPTTAG.findall(text):
+        a = attrs(tag)
+        if not a.get("src"):
+            continue
+        target = local_target(a["src"], base_dir)
+        if not target:
+            continue
+        body, nbytes = read_text(target)
+        js_files.append({"path": os.path.relpath(target, base_dir), "bytes": nbytes})
+        js_text.append(body)
+
+    return "\n".join(css_text), "\n".join(js_text), css_files, js_files, missing
+
+
+def harvest(path, follow_local=True):
+    text, raw_bytes = read_text(path)
+    base_dir = os.path.dirname(os.path.abspath(path))
 
     styles = "\n".join(RE_STYLE.findall(text))
     scripts = "\n".join(RE_SCRIPT.findall(text))
+    inline_css_len, inline_js_len = len(styles), len(scripts)
+
+    # A saved page keeps its CSS in a sidecar folder. Without this the page
+    # harvests as empty — no palette, no tokens, no techniques.
+    linked_css = linked_js = ""
+    css_files, js_files, missing_refs = [], [], []
+    if follow_local:
+        linked_css, linked_js, css_files, js_files, missing_refs = gather_linked(text, base_dir)
+        styles += "\n" + linked_css
+        scripts += "\n" + linked_js
+        # Technique and flag detection scans the whole document, so the
+        # linked material has to be part of it.
+        text = text + "\n<style>" + linked_css + "</style>\n<script>" + linked_js + "</script>"
     # Inline style="" attributes count as CSS for palette purposes.
     css = styles + "\n" + "\n".join(
         m.group(1) or m.group(2) or "" for m in
@@ -310,13 +389,20 @@ def harvest(path):
 
     return {
         "file": os.path.relpath(path),
-        "bytes": len(raw),
+        "bytes": raw_bytes,
         "weight": {
-            "inline_css_bytes": len(styles),
-            "inline_js_bytes": len(scripts),
+            "inline_css_bytes": inline_css_len,
+            "inline_js_bytes": inline_js_len,
+            "linked_css_bytes": sum(f["bytes"] for f in css_files),
+            "linked_js_bytes": sum(f["bytes"] for f in js_files),
             "base64_payload_bytes": b64,
-            "markup_bytes": max(0, len(text) - len(styles) - len(scripts) - b64),
-            "self_contained": not origins,
+            "markup_bytes": max(0, raw_bytes - inline_css_len - inline_js_len - b64),
+            "self_contained": not origins and not css_files and not js_files,
+        },
+        "linked": {
+            "css": css_files,
+            "js": js_files,
+            "unresolved": missing_refs,
         },
         "meta": {
             "title": (" ".join(title.group(1).split()) if title else None),
@@ -529,6 +615,8 @@ def main():
     ap.add_argument("input", help="a manifest.json from ingest.py, or a single .html file")
     ap.add_argument("-o", "--out", help="output folder (default: print one page to stdout)")
     ap.add_argument("--top", type=int, default=24, help="palette entries in the report (default 24)")
+    ap.add_argument("--no-follow", action="store_true",
+                    help="don't read stylesheets/scripts the page links to from its own folder")
     args = ap.parse_args()
 
     if args.input.endswith(".json"):
@@ -548,7 +636,7 @@ def main():
     results, failed = [], []
     for p in paths:
         try:
-            results.append(harvest(p))
+            results.append(harvest(p, follow_local=not args.no_follow))
         except (OSError, UnicodeError) as e:
             failed.append((p, str(e)))
 
