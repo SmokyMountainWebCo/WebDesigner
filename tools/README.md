@@ -42,7 +42,11 @@ handoff.py         a refusal -> a self-contained block you paste into
                    never drop anything.
                    `roles` lists the scoped roles and, for each, the
                    falsifier — the thing that would show its output was
-                   wrong. A role without one doesn't exist.
+                   wrong. A role without one is rejected on load, as is
+                   one named after a recorded refusal. `--roles` loads
+                   more from a file, so a business keeps its own
+                   standards in its own repo; the `standard` ask carries
+                   that standard along as the only authority.
 ```
 
 **Checking claims** — asserted to verified:

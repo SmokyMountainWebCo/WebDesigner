@@ -32,9 +32,20 @@ Three properties make it portable rather than Claude-specific:
 And the rule inherited from the rest of the toolchain: **a model may
 propose, raise a hold, or fill a blank. It may never drop anything.**
 
+**Roles are loadable, and the standards they enforce live elsewhere.**
+A role that checks somebody's own doctrine has to name that doctrine's
+clauses, which is exactly the substance this repo refuses to carry. So
+this file ships the mechanism and two general roles; whoever owns a
+standard ships the roles that enforce it, via `--roles`. The falsifier
+requirement is checked on load rather than documented and hoped for —
+a role with nothing that could show it wrong is rejected at the door,
+and a role named after a recorded refusal is rejected with the reason.
+
 Usage:
     python3 tools/handoff.py primer
     python3 tools/handoff.py roles
+    python3 tools/handoff.py --roles ../other-repo/config/roles.json roles
+    python3 tools/handoff.py ask standard --text "..." --standard rules.md
     python3 tools/handoff.py ask archetype --text "cabin, nightly, also for sale"
     python3 tools/handoff.py ask facts --text "..." --archetype service
     python3 tools/handoff.py ask link --text "frag A" --text "frag B"
@@ -44,6 +55,7 @@ Usage:
 
 import argparse
 import json
+import os
 import re
 import sys
 from datetime import date
@@ -109,6 +121,28 @@ ASKS = {
             "required": ["facts"],
         },
         "rules": [1, 3],
+    },
+    "standard": {
+        "question": "Does this comply with the written standard, and "
+                    "which clause decides?",
+        "context": "The standard is supplied below and is the only "
+                   "authority — do not apply general best practice, "
+                   "taste, or anything you know from elsewhere. Cite the "
+                   "clause by its exact name. If no clause covers this, "
+                   "say so rather than reaching for one that nearly fits.",
+        "schema": {
+            "type": "object",
+            "properties": {
+                "verdict": {"type": "string",
+                            "enum": ["pass", "fail", "not-covered"]},
+                "clause": {"type": "string",
+                           "description": "exact clause name, or null"},
+                "reason": {"type": "string"},
+                "offending_phrase": {"type": "string"},
+            },
+            "required": ["verdict", "reason"],
+        },
+        "rules": [1, 2, 5],
     },
     "link": {
         "question": "Do these fragments belong to the same idea?",
@@ -177,7 +211,52 @@ RULE_TEXT = {
     3: "NEVER DISCARD ANYTHING — you may flag or defer, never delete.",
     4: "WRITING STYLE IS NEVER EVIDENCE — caps, terseness and fragments "
        "carry no signal.",
+    5: "THE SUPPLIED STANDARD IS THE ONLY AUTHORITY — cite a clause by "
+       "name, or answer \"not-covered\". Never substitute best practice.",
 }
+
+
+def load_roles(path):
+    """Merge roles from a JSON file.
+
+    The mechanism lives here; the *standards* do not. A role that checks
+    a business's own doctrine has to name that doctrine's clauses, which
+    is exactly the substance this repo refuses to carry. So roles are
+    loadable: this file ships the two general ones, and whoever owns a
+    standard ships the roles that enforce it.
+
+    The falsifier requirement is enforced on load, not documented and
+    hoped for — a role with nothing that could show it wrong is rejected
+    at the door regardless of who wrote it."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            extra = json.load(fh)
+    except OSError as e:
+        raise SystemExit("error: can't read roles %s (%s)" % (path, e.strerror))
+    except ValueError as e:
+        raise SystemExit("error: %s is not valid JSON (%s)" % (path, e))
+
+    if not isinstance(extra, dict):
+        raise SystemExit("error: %s must be an object of role-name -> role"
+                         % path)
+
+    for name, spec in extra.items():
+        if name in REFUSED_ROLES:
+            raise SystemExit(
+                "error: %r is a recorded refusal, not an oversight.\n  %s\n"
+                "  Re-scope it against a written standard and give it a "
+                "different name." % (name, REFUSED_ROLES[name]))
+        missing = [k for k in ("does", "falsifier", "ask") if not spec.get(k)]
+        if missing:
+            raise SystemExit(
+                "error: role %r is missing %s.\n  A role without a "
+                "falsifier is an opinion with a job title."
+                % (name, " and ".join(missing)))
+        if spec["ask"] not in ASKS:
+            raise SystemExit("error: role %r wants ask kind %r, which "
+                             "doesn't exist" % (name, spec["ask"]))
+        ROLES[name] = spec
+    return ROLES
 
 
 def _wrap(text, width):
@@ -413,6 +492,8 @@ def main():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--roles", default=os.environ.get("HANDOFF_ROLES"),
+                    help="JSON file of extra roles (or $HANDOFF_ROLES)")
     sub = ap.add_subparsers(dest="cmd")
 
     sub.add_parser("primer", help="rules block to paste at the top of a chat")
@@ -422,6 +503,8 @@ def main():
     p.add_argument("kind", choices=sorted(ASKS))
     p.add_argument("--text", action="append", default=[], required=False)
     p.add_argument("--archetype", help="context for a facts ask")
+    p.add_argument("--standard", help="file holding the written standard, "
+                                      "required for a `standard` ask")
 
     p = sub.add_parser("apply", help="read a model's reply back in")
     p.add_argument("--reply", help="file with the reply; omit to read stdin")
@@ -431,6 +514,8 @@ def main():
     args = ap.parse_args()
     if args.selftest:
         sys.exit(selftest())
+    if args.roles:
+        load_roles(args.roles)
 
     if args.cmd == "primer":
         print(PRIMER)
@@ -457,6 +542,18 @@ def main():
         if not args.text:
             ap.error("give at least one --text")
         extra = {"Archetype": args.archetype} if args.archetype else None
+        if args.kind == "standard":
+            if not args.standard:
+                ap.error("a `standard` ask needs --standard <file>; the "
+                         "standard is the only authority and must travel "
+                         "with the question")
+            try:
+                text = open(args.standard, encoding="utf-8").read()
+            except OSError as e:
+                sys.exit("error: can't read %s (%s)" % (args.standard,
+                                                        e.strerror))
+            extra = dict(extra or {})
+            extra["THE STANDARD (the only authority)"] = "\n" + text.strip()
         body, _ = render_ask(args.kind, args.text, extra)
         print(body)
         return
