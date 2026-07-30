@@ -30,6 +30,9 @@ docs/
                              offline or killing its email.
   INTAKE.md                  Absorbing saved pages and zip archives into
                              technique — the pipeline and the license gate.
+  CINEMATIC-SCROLL.md        Scroll as camera: video scrub, image sequences,
+                             photogrammetry and Gaussian splats — and which
+                             one a given trade actually needs.
 template/
   page-template.html         A single-file page: embedded fonts, inline
                              CSS/JS, scroll-driven shader, zero requests.
@@ -82,6 +85,7 @@ licensed assets do not.
 | ship a page that never breaks from a dead CDN | `template/` + `tools/` |
 | point a domain at a site | `docs/DNS-RUNBOOK.md` |
 | turn a folder of saved pages into reusable technique | `docs/INTAKE.md` |
+| build a scroll-driven tour, flyover or walkthrough | `docs/CINEMATIC-SCROLL.md` |
 
 ## The principles the whole repo runs on
 

@@ -22,6 +22,7 @@ the authority on its scope — this table just routes you there.
 | getting a big visual result cheaply; what technique to reach for | `docs/DESIGN-LOOPHOLES.md` |
 | licenses, fonts, icons, images, data, hosting, self-hosting | `docs/OPEN-SOURCE.md` |
 | the scroll-driven WebGL background, in detail | `docs/SCROLL-SCENE.md` |
+| scroll-driven tours, flyovers, walkthroughs, video scrub, splats | `docs/CINEMATIC-SCROLL.md` |
 | pointing a domain, moving a site, not killing anyone's email | `docs/DNS-RUNBOOK.md` |
 | building or shipping an actual page | `tools/README.md`, then `template/` |
 | absorbing saved pages / zip archives into technique | `docs/INTAKE.md` |

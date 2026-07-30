@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scroll-scrub sequence — self-contained reference</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--
+  Source:  original
+  License: n/a — method only
+  Date:    2026-07-30
+  What:    A scroll-driven frame sequence (the "walk through the room"
+           effect) with no dependencies. Canvas-drawn, decode-gated,
+           and degrading to a poster image at every failure point.
+
+  The transferable part is the failure behavior, not the effect:
+
+    no JS            -> poster image + full text. Nothing is hidden by
+                        default; the script opts in by setting .js.
+    JS, no frames    -> poster stays, text still scrolls normally.
+    reduced motion   -> one representative frame, no scrubbing.
+    slow connection  -> poster shows until enough frames decode; the
+                        sequence starts when it can run, not before.
+    save-data on     -> sequence never loads at all.
+
+  Swap SEQ.src for a real path and set SEQ.count. Frames here are
+  generated in-page so the file runs from disk with nothing alongside it.
+-->
+<style>
+  :root{
+    --ground:#0A1210; --text:#EDE6D8; --muted:#93A7B4; --accent:#E9A63C;
+    --label:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--text);
+    font:16px/1.65 Georgia,serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:44rem;margin:0 auto;padding:0 1.25rem}
+  h1{font-size:clamp(2rem,6vw,3.2rem);line-height:1.08;margin:0 0 .6rem;text-wrap:balance}
+  p{margin:0 0 1rem;color:#C9C3B6}
+  .label{font-family:var(--label);font-size:.62rem;letter-spacing:.26em;
+    text-transform:uppercase;color:var(--muted)}
+
+  /* The scene: a tall scroll track with a sticky viewport inside it.
+     Track length sets how much scrolling the sequence spans. */
+  .scene{position:relative;height:320vh}
+  .stage{position:sticky;top:0;height:100svh;overflow:hidden;
+    background:#06090b center/cover no-repeat}
+  .stage canvas,.stage .poster{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  /* The canvas is only revealed once it has actually painted a frame, so a
+     blank canvas can never replace a good poster. */
+  .stage canvas{opacity:0;transition:opacity .3s linear}
+  .stage.ready canvas{opacity:1}
+  .stage .cap{position:absolute;left:0;right:0;bottom:0;padding:1.25rem;
+    background:linear-gradient(transparent,rgba(6,9,11,.85));
+    font-family:var(--label);font-size:.6rem;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--muted)}
+  .stage .cap b{color:var(--accent);font-weight:500}
+
+  /* Captions pinned to points along the track. They are ordinary flow
+     content — a crawler and a reader with no JS get all of them. */
+  .beats{position:relative;z-index:1}
+  .beat{min-height:100vh;display:flex;align-items:center;padding:2rem 0}
+  .beat .card{background:rgba(8,15,12,.82);border:1px solid rgba(147,167,180,.22);
+    padding:1.5rem 1.5rem 1.6rem;max-width:30rem}
+  .js .beat .card{opacity:.25;transition:opacity .5s ease}
+  .js .beat.on .card{opacity:1}
+  @media (prefers-reduced-motion:reduce){
+    .js .beat .card{opacity:1;transition:none}
+    .stage canvas{transition:none}
+  }
+  footer{padding:4rem 0 6rem;color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+
+<div class="wrap" style="padding-top:18vh;padding-bottom:8vh">
+  <p class="label">Reference snippet</p>
+  <h1>A walk that follows the scroll</h1>
+  <p>Scroll to move through the sequence. Scroll back and it walks backward.
+     Everything below is real text in the document — the sequence is an
+     enhancement layered over content that already works without it.</p>
+</div>
+
+<!-- The scene. The poster is the load-bearing element: it is what a
+     crawler indexes, what a reduced-motion visitor sees, and what stays
+     on screen if anything at all goes wrong. -->
+<section class="scene" id="scene" aria-label="Walkthrough sequence">
+  <div class="stage" id="stage">
+    <img class="poster" id="poster" alt="Ridge line under drifting fog, lit from the left." decoding="async">
+    <canvas id="cv" aria-hidden="true"></canvas>
+    <div class="cap"><b id="pct">0%</b> &nbsp;through the walk</div>
+  </div>
+
+  <div class="beats wrap">
+    <div class="beat"><div class="card">
+      <p class="label">One</p>
+      <p>Each beat is ordinary flow content sitting above the sticky stage.
+         It is readable, selectable, and indexable with scripting off.</p>
+    </div></div>
+    <div class="beat"><div class="card">
+      <p class="label">Two</p>
+      <p>The sequence never carries information that isn't also written
+         here. If it fails, nothing is lost but the motion.</p>
+    </div></div>
+    <div class="beat"><div class="card">
+      <p class="label">Three</p>
+      <p>Scroll position maps to frame index. No animation is played, so
+         there is nothing to fall out of sync with.</p>
+    </div></div>
+  </div>
+</section>
+
+<div class="wrap"><footer>
+  <p class="label">After the scene</p>
+  <p>The page continues as a normal document.</p>
+</footer></div>
+
+<script>
+document.documentElement.className += ' js';
+(function () {
+  'use strict';
+
+  // ── configuration ──────────────────────────────────────────────────
+  // Point src at a real sequence and set count. %d is the zero-padded index.
+  var SEQ = { src: null, count: 60, pad: 3 };
+
+  var scene  = document.getElementById('scene'),
+      stage  = document.getElementById('stage'),
+      cv     = document.getElementById('cv'),
+      poster = document.getElementById('poster'),
+      pct    = document.getElementById('pct'),
+      ctx    = cv.getContext('2d', { alpha: false });
+
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // Respect an explicit request for less data. A decorative sequence is
+  // exactly the thing Save-Data is asking us not to send.
+  var conn = navigator.connection || {};
+  var saveData = !!conn.saveData;
+
+  var frames = [], loaded = 0, current = -1, ticking = false, active = false;
+
+  // ── frame sources ──────────────────────────────────────────────────
+  // With no src configured, generate the sequence in-page so this file is
+  // runnable on its own. A real project deletes makeFrames and sets SEQ.src.
+  function urlFor(i) {
+    var n = String(i);
+    while (n.length < SEQ.pad) n = '0' + n;
+    return SEQ.src.replace('%d', n);
+  }
+
+  function makeFrames(n) {
+    var out = [], W = 640, H = 360;
+    for (var i = 0; i < n; i++) {
+      var c = document.createElement('canvas'); c.width = W; c.height = H;
+      var x = c.getContext('2d'), t = i / (n - 1);
+      var g = x.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#06090b'); g.addColorStop(.45, '#22333c');
+      g.addColorStop(.70, '#5c6e79'); g.addColorStop(1, '#c98f5a');
+      x.fillStyle = g; x.fillRect(0, 0, W, H);
+      [[.66, 28, '#1b2b2f', .6, 0], [.76, 21, '#141f22', 1, 1.7],
+       [.88, 15, '#0d1618', 1.6, 3.4]].forEach(function (r) {
+        x.beginPath(); x.moveTo(0, H);
+        for (var px = 0; px <= W; px += 6) {
+          var v = Math.sin(px * .010 + r[4] + t * r[3]) * r[1]
+                + Math.sin(px * .027 + r[4] * 2.3 + t * r[3] * 1.7) * r[1] * .45;
+          x.lineTo(px, H * r[0] - v - t * 24 * r[3]);
+        }
+        x.lineTo(W, H); x.closePath(); x.fillStyle = r[2]; x.fill();
+      });
+      x.globalAlpha = .5;
+      var lx = W * (.15 + .7 * t), ly = H * .42;
+      var rg = x.createRadialGradient(lx, ly, 0, lx, ly, 90);
+      rg.addColorStop(0, 'rgba(233,166,60,.75)'); rg.addColorStop(1, 'rgba(233,166,60,0)');
+      x.fillStyle = rg; x.fillRect(lx - 100, ly - 100, 200, 200);
+      x.globalAlpha = 1;
+      out.push(c);
+    }
+    return out;
+  }
+
+  // ── drawing ────────────────────────────────────────────────────────
+  function size() {
+    // Cap the backing store at 2x. Beyond that the decode and fill cost
+    // rises fast for no visible gain on a photographic sequence.
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = stage.clientWidth, h = stage.clientHeight;
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+      cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+      current = -1;                       // force a repaint at the new size
+    }
+  }
+
+  function draw(i) {
+    var f = frames[i];
+    if (!f || i === current) return;
+    var fw = f.width || f.naturalWidth, fh = f.height || f.naturalHeight;
+    if (!fw || !fh) return;
+    // object-fit: cover, done by hand so the canvas matches the poster.
+    var s = Math.max(cv.width / fw, cv.height / fh);
+    var w = fw * s, h = fh * s;
+    ctx.drawImage(f, (cv.width - w) / 2, (cv.height - h) / 2, w, h);
+    current = i;
+    if (!stage.classList.contains('ready')) stage.classList.add('ready');
+  }
+
+  function progress() {
+    var r = scene.getBoundingClientRect();
+    var span = r.height - window.innerHeight;
+    if (span <= 0) return 0;
+    var p = -r.top / span;
+    return p < 0 ? 0 : p > 1 ? 1 : p;
+  }
+
+  function update() {
+    ticking = false;
+    var p = progress();
+    pct.textContent = Math.round(p * 100) + '%';
+    if (!active || !loaded) return;
+    // Only index into frames that have actually decoded, so early scrolling
+    // shows a real frame rather than a gap.
+    var i = Math.min(loaded - 1, Math.round(p * (SEQ.count - 1)));
+    draw(i);
+  }
+
+  function onScroll() {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }
+
+  // ── loading ────────────────────────────────────────────────────────
+  function loadSequence() {
+    if (SEQ.src === null) {                       // self-contained demo path
+      frames = makeFrames(SEQ.count); loaded = SEQ.count;
+      poster.src = frames[0].toDataURL('image/jpeg', .7);
+      start(); return;
+    }
+    // Fetch in order and in small batches: the first frames are the ones
+    // needed first, and a burst of 200 parallel requests helps nobody.
+    var i = 0, inflight = 0, MAX = 6;
+    (function pump() {
+      while (inflight < MAX && i < SEQ.count) {
+        (function (n) {
+          inflight++;
+          var img = new Image();
+          img.decoding = 'async';
+          if (n === 0) img.fetchPriority = 'high';
+          img.onload = function () {
+            (img.decode ? img.decode() : Promise.resolve()).catch(function () {})
+              .then(function () {
+                frames[n] = img;
+                if (n === loaded) { while (frames[loaded]) loaded++; }
+                if (n === 0) { poster.src = img.src; start(); }
+                inflight--; pump();
+              });
+          };
+          img.onerror = function () { inflight--; pump(); };
+          img.src = urlFor(n);
+        })(i++);
+      }
+    })();
+  }
+
+  function start() {
+    if (active) return;
+    active = true;
+    size(); update();
+  }
+
+  // ── wiring ─────────────────────────────────────────────────────────
+  // Reveal beats as they arrive. This works whether or not the sequence does.
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('on'); });
+    }, { rootMargin: '-25% 0px -25% 0px' });
+    [].forEach.call(document.querySelectorAll('.beat'), function (b) { io.observe(b); });
+  } else {
+    [].forEach.call(document.querySelectorAll('.beat'), function (b) { b.classList.add('on'); });
+  }
+
+  if (reduce || saveData) {
+    // Show one representative frame and stop. No scrubbing, no sequence
+    // fetch. The poster carries the scene.
+    if (SEQ.src === null) {
+      var one = makeFrames(3)[1];
+      poster.src = one.toDataURL('image/jpeg', .7);
+    } else {
+      poster.src = urlFor(Math.floor(SEQ.count / 2));
+    }
+    pct.parentNode.style.display = 'none';
+  } else {
+    // Only spend bandwidth once the scene is plausibly on its way in.
+    if ('IntersectionObserver' in window) {
+      var io2 = new IntersectionObserver(function (es, o) {
+        if (es[0].isIntersecting) { o.disconnect(); loadSequence(); }
+      }, { rootMargin: '200% 0px' });
+      io2.observe(scene);
+    } else { loadSequence(); }
+    addEventListener('scroll', onScroll, { passive: true });
+    addEventListener('resize', function () { size(); current = -1; update(); }, { passive: true });
+  }
+})();
+</script>
+</body>
+</html>
