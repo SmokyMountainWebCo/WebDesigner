@@ -118,6 +118,11 @@ Runnable assets are meant to stay runnable. After touching `template/` or
 python3 tools/build.py template/page-template.html \
     -c template/config.example.json -o /tmp/page.html
 node tools/check.js /tmp/page.html      # expects PASS
+
+# The gates run on themselves too — a tool that can't judge this repo's
+# own output isn't ready to judge anyone else's.
+mkdir -p /tmp/pf && cp /tmp/page.html /tmp/pf/
+python3 tools/preflight.py /tmp/pf --draft
 ```
 
 `dist/` output and generated screenshots are build artifacts — don't commit

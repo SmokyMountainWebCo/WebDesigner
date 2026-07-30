@@ -27,7 +27,7 @@ structure does.
 
 Stdlib only. No network.
 """
-import argparse, hashlib, os, re, sys
+import argparse, hashlib, json, os, re, sys
 from itertools import combinations
 
 RE_SCRIPT = re.compile(r"<script[^>]*>.*?</script>", re.I | re.S)
@@ -170,8 +170,13 @@ def main():
 
     # A policy file makes the decision durable. Explicit flags still win.
     if args.policy:
-        import json as _json
-        pol = _json.load(open(args.policy, encoding="utf-8"))
+        # A gate that dies with a traceback in CI teaches people to ignore it.
+        try:
+            pol = json.load(open(args.policy, encoding="utf-8"))
+        except OSError as e:
+            sys.exit("error: can't read policy %s (%s)" % (args.policy, e.strerror))
+        except ValueError as e:
+            sys.exit("error: policy %s is not valid JSON (%s)" % (args.policy, e))
         given = set(a.lstrip("-").replace("-", "_") for a in sys.argv if a.startswith("--"))
         for key, dest in (("copy_max", "threshold"), ("cohesion_min", "cohesion"),
                           ("formula_max", "max_formula"), ("network", "network")):

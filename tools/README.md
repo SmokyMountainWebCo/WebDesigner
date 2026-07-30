@@ -1,7 +1,8 @@
 # The toolchain
 
-Five small programs. No `package.json`, no lockfile, no framework. Python
-stdlib only except the optional QA pass, which wants Playwright.
+Seven small programs, in two directions. No `package.json`, no lockfile,
+no framework. Python stdlib only except the optional QA pass, which wants
+Playwright.
 
 **Building outward** — template to shipped page:
 

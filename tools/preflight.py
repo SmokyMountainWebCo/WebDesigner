@@ -381,7 +381,10 @@ def main():
     print("\n  %d page(s) · %d FAIL · %d WARN · archetype=%s%s"
           % (len(pages), n_f, n_w, args.archetype, " · draft" if args.draft else ""))
     if n_f:
-        print("  BLOCKED — fix the FAILs or mark the build --draft.")
+        # Telling somebody to pass --draft when they already did is the kind
+        # of advice that teaches people to stop reading the output.
+        print("  BLOCKED — fix the FAILs%s." %
+              ("" if args.draft else " or mark the build --draft"))
         sys.exit(1)
     if n_w and args.strict:
         print("  BLOCKED — --strict treats warnings as blocking.")

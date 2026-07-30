@@ -9,11 +9,22 @@
      Note: unlisted is not private — anyone with the URL can open it. -->
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="{{META_DESCRIPTION}}">
-<!-- Link preview card. Absolute URLs only; crawlers do not run JS.
-     See docs/MASTERING-THE-INTERNET.md for the full tag set. -->
+<!-- Link preview card. Absolute URLs only; crawlers do not run JS, and a
+     relative og:image silently resolves to nothing. This is the tag set a
+     page is judged on every time somebody pastes the link, so it ships
+     complete rather than partial — see docs/MASTERING-THE-INTERNET.md.
+     OG_IMAGE must be a real 1200x630 file at an absolute URL; generate one
+     with the method in library/patterns/link-preview-card.md. -->
+<link rel="canonical" href="{{CANONICAL_URL}}">
 <meta property="og:title" content="{{PAGE_TITLE}}">
 <meta property="og:description" content="{{META_DESCRIPTION}}">
 <meta property="og:type" content="website">
+<meta property="og:url" content="{{CANONICAL_URL}}">
+<meta property="og:image" content="{{OG_IMAGE}}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{OG_IMAGE_ALT}}">
+<meta name="twitter:card" content="summary_large_image">
 <style>
 /*@@FONTS@@*/
 /* Embedded @font-face lines are injected above by tools/build.py from a fonts.css

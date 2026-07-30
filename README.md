@@ -9,8 +9,8 @@ technique — portable to any project, any market, anybody.
 
 ## The structure
 
-Five knowledge packs and a working toolchain. The packs are the *why* and
-the *what*; `tools/` and `template/` are the *how*, runnable today.
+Knowledge packs and a working toolchain. The packs are the *why* and the
+*what*; `tools/` and `template/` are the *how*, runnable today.
 
 ```
 docs/
@@ -51,6 +51,9 @@ tools/
                              techniques, dependencies, shaders, a11y, weight.
   preflight.py               The gate: refuses to ship a build with unfilled
                              blanks, broken previews or a dead canonical.
+  distinct.py                Across a set of sites: how alike the copy,
+                             structure, headlines and assets really are.
+  network-policy.example.json  The four thresholds distinct.py reads.
 library/                     What graduated: palettes, tokens, patterns,
                              shaders, snippets. Specimens, each with a
                              source and a license.

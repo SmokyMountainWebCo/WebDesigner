@@ -1,5 +1,8 @@
 {
   "PAGE_TITLE": "A Short Line That Names the Idea",
+  "CANONICAL_URL": "https://example.com/",
+  "OG_IMAGE": "https://example.com/og.png",
+  "OG_IMAGE_ALT": "One line describing the card image, for anyone who can't see it.",
   "META_DESCRIPTION": "One sentence, under 155 characters, that would make sense as the only thing someone reads about this page.",
   "BRAND_A": "Your Name",
   "BRAND_B": "Division or tagline",
