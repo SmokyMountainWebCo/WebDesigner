@@ -137,6 +137,16 @@ bookmarks it accumulated are worth real money.
   record and not the other. Both are needed.
 - **HTTPS warning:** the certificate hasn't been issued yet — usually
   resolves within an hour of DNS being correct.
+- **HTTPS warning that persists after DNS is correct:** stop waiting and
+  read the certificate — `curl -sSv https://the-hostname 2>&1 | grep
+  subject:`. A certificate for the platform's own domain
+  (`*.theirplatform.com`) rather than the hostname you pointed is not
+  slow issuance; it means the platform was never told about the custom
+  hostname. A vendor-hosted subdomain has to be registered in the
+  vendor's dashboard as well as in DNS — DNS gets the request to the
+  right building; the vendor still has to know the name to answer for it
+  and issue a certificate. Fix it in their dashboard, not in DNS.
+  (Learned on a real cutover; added 2026-08-12.)
 - **Email stopped:** MX records didn't survive. Restore from the export
   you took in pre-flight, immediately.
 
